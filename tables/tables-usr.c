@@ -2,14 +2,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define WORD_SIZE sizeof(unsigned long)
-
 int main(void)
 {
 	int i;
 	unsigned long *buf;
 	int err = EXIT_SUCCESS;
 	long page_size = sysconf(_SC_PAGESIZE);
+	long ptrs_per_pgd = page_size/sizeof(unsigned long);
 
 	FILE *file = fopen("/sys/kernel/debug/tables/pgd", "r");
 	if (!file) {
@@ -24,7 +23,7 @@ int main(void)
 		goto done;
 	}
 
-	for (i = 0; i < page_size/WORD_SIZE; i++) {
+	for (i = 0; i < ptrs_per_pgd; i++) {
 		unsigned long curr = buf[i];
 
 		if (!curr)
