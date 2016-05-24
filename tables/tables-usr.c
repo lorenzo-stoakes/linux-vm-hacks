@@ -20,6 +20,7 @@ int main(void)
 	buf = malloc(page_size);
 	if (fread(buf, 1, page_size, file) != page_size) {
 		fprintf(stderr, "tables: error: read error\n");
+		err = EXIT_FAILURE;
 		goto done;
 	}
 
