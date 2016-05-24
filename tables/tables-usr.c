@@ -8,10 +8,9 @@
 int main(void)
 {
 	int i;
-	unsigned long *buf;
-	int err = EXIT_SUCCESS;
-	long page_size = sysconf(_SC_PAGESIZE);
-	long ptrs_per_pgd = page_size/sizeof(unsigned long);
+	unsigned long entry;
+	size_t word_size = sizeof(unsigned long);
+	long ptrs_per_pgd = sysconf(_SC_PAGESIZE)/word_size;
 	unsigned long flags_mask = ptrs_per_pgd - 1;
 	unsigned long phys_addr_mask = ~flags_mask;
 
@@ -21,26 +20,22 @@ int main(void)
 		return EXIT_FAILURE;
 	}
 
-	buf = malloc(page_size);
-	if (fread(buf, 1, page_size, file) != page_size) {
-		fprintf(stderr, "tables: error: read error\n");
-		err = EXIT_FAILURE;
-		goto done;
-	}
-
 	for (i = 0; i < ptrs_per_pgd; i++) {
-		unsigned long entry = buf[i];
-		unsigned long phys_addr = entry&phys_addr_mask;
-		unsigned long flags = entry&flags_mask;
+		unsigned long phys_addr, flags;
 
+		if (fread(&entry, 1, word_size, file) != word_size) {
+			fprintf(stderr, "tables: error: read error\n");
+			fclose(file);
+			return EXIT_FAILURE;
+		}
+
+		flags = entry&flags_mask;
 		if (!(flags&_PAGE_PRESENT))
 			continue;
+
+		phys_addr = entry&phys_addr_mask;
 		printf("%03d: %016lx\n", i, phys_addr);
 	}
 
-done:
-	fclose(file);
-	free(buf);
-
-	return err;
+	return EXIT_SUCCESS;
 }
