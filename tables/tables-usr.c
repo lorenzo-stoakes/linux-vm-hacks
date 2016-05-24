@@ -29,9 +29,9 @@ int main(void)
 	}
 
 	for (i = 0; i < ptrs_per_pgd; i++) {
-		unsigned long curr = buf[i];
-		unsigned long phys_addr = curr&phys_addr_mask;
-		unsigned long flags = curr&flags_mask;
+		unsigned long entry = buf[i];
+		unsigned long phys_addr = entry&phys_addr_mask;
+		unsigned long flags = entry&flags_mask;
 
 		if (!(flags&_PAGE_PRESENT))
 			continue;
