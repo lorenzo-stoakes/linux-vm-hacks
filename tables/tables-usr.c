@@ -7,9 +7,9 @@
 int main(void)
 {
 	int i;
+	unsigned long *buf;
 	int err = EXIT_SUCCESS;
 	long page_size = sysconf(_SC_PAGESIZE);
-	unsigned long *buf;
 
 	FILE *file = fopen("/sys/kernel/debug/tables/pgd", "r");
 	if (!file) {
