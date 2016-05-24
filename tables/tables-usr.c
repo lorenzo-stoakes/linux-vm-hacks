@@ -4,6 +4,21 @@
 
 /* Kinda assuming x86 here. */
 #define _PAGE_PRESENT (1UL<<0)
+#define PAGE_BITS     12
+
+void print_bin(unsigned long val)
+{
+	int i;
+	char buf[PAGE_BITS];
+
+	buf[PAGE_BITS] = '\0';
+	for (i = 0; i < PAGE_BITS && val != 0; i++) {
+		buf[PAGE_BITS-1-i] = (val&1) ? '1' : '0';
+		val >>= 1;
+	}
+
+	printf("%s", buf + PAGE_BITS - i);
+}
 
 int main(void)
 {
@@ -38,9 +53,13 @@ int main(void)
 
 		printf("%03d: ", i);
 		if (flags&_PAGE_PRESENT)
-			printf("%016lx\n", phys_addr);
+			printf("%016lx ", phys_addr);
 		else
-			printf("<swapped>\n");
+			printf("<swapped> ");
+
+		print_bin(flags);
+
+		printf("\n");
 	}
 
 	return EXIT_SUCCESS;
