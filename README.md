@@ -31,5 +31,11 @@ tables.ko` to insert the module, preferably in a VM.
 
 The current process's PGD is exposed raw at `/sys/kernel/debug/tables/pgd`.
 
+## License
+
+All code here is licensed under the [GPL v2][gpl-v2] license to remain
+compatible with the kernel itself.
+
 [vm-notes]:https://github.com/lorenzo-stoakes/linux-vm-notes
 [page-map]:https://github.com/torvalds/linux/blob/v4.6/Documentation/vm/pagemap.txt
+[gpl-v2]:http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
