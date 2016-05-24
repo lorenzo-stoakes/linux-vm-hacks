@@ -20,6 +20,8 @@ vastly more useful :) it allows a process to map between virtual and physical
 pages without reference to individual page tables whereas `tables` is designed
 to expose these details.
 
+Additionally, `tables` exposes kernel mappings.
+
 #### Usage
 
 __WARNING:__ Don't use this with a kernel you care about. It's experimental and
