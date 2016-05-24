@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+/* Kinda assuming x86 here. */
+#define _PAGE_PRESENT (1UL<<0)
+
 int main(void)
 {
 	int i;
@@ -9,6 +12,8 @@ int main(void)
 	int err = EXIT_SUCCESS;
 	long page_size = sysconf(_SC_PAGESIZE);
 	long ptrs_per_pgd = page_size/sizeof(unsigned long);
+	unsigned long flags_mask = ptrs_per_pgd - 1;
+	unsigned long phys_addr_mask = ~flags_mask;
 
 	FILE *file = fopen("/sys/kernel/debug/tables/pgd", "r");
 	if (!file) {
@@ -25,10 +30,12 @@ int main(void)
 
 	for (i = 0; i < ptrs_per_pgd; i++) {
 		unsigned long curr = buf[i];
+		unsigned long phys_addr = curr&phys_addr_mask;
+		unsigned long flags = curr&flags_mask;
 
-		if (!curr)
+		if (!(flags&_PAGE_PRESENT))
 			continue;
-		printf("%03d: %016lx\n", i, curr);
+		printf("%03d: %016lx\n", i, phys_addr);
 	}
 
 done:
