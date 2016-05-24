@@ -29,12 +29,18 @@ int main(void)
 			return EXIT_FAILURE;
 		}
 
-		flags = entry&flags_mask;
-		if (!(flags&_PAGE_PRESENT))
+		/* Skip empty entries. */
+		if (!entry)
 			continue;
 
+		flags = entry&flags_mask;
 		phys_addr = entry&phys_addr_mask;
-		printf("%03d: %016lx\n", i, phys_addr);
+
+		printf("%03d: ", i);
+		if (flags&_PAGE_PRESENT)
+			printf("%016lx\n", phys_addr);
+		else
+			printf("<swapped>\n");
 	}
 
 	return EXIT_SUCCESS;
