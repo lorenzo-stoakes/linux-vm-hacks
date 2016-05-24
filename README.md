@@ -31,6 +31,9 @@ tables.ko` to insert the module, preferably in a VM.
 
 The current process's PGD is exposed raw at `/sys/kernel/debug/tables/pgd`.
 
+There is a userland tool included which outputs PGD entries using this
+interface, simply run `sudo ./tables` from the `tables` directory.
+
 ## License
 
 All code here is licensed under the [GPL v2][gpl-v2] license to remain
