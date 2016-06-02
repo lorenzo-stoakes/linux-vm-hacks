@@ -25,7 +25,15 @@ void print_bin(unsigned long val)
 	printf("%s", buf + PAGE_BITS - i);
 }
 
-static void print_pagetable(char *path, int count)
+static void print_indent(int level)
+{
+	int i;
+
+	for (i = 0; i < level; i++)
+		printf("\t");
+}
+
+static void print_pagetable(char *path, int count, int indent)
 {
 	int i;
 	unsigned long entry;
@@ -54,6 +62,7 @@ static void print_pagetable(char *path, int count)
 		flags = entry&flags_mask;
 		phys_addr = entry&phys_addr_mask;
 
+		print_indent(indent);
 		printf("%03d: ", i);
 		if (flags&_PAGE_PRESENT)
 			printf("%016lx ", phys_addr);
@@ -76,7 +85,7 @@ int main(void)
 	if (SKIP_KERNEL)
 		ptrs_per_pgd /= 2;
 
-	print_pagetable(DEBUGFS_PATH "pgd", ptrs_per_pgd);
+	print_pagetable(DEBUGFS_PATH "pgd", ptrs_per_pgd, 0);
 
 	return EXIT_SUCCESS;
 }
