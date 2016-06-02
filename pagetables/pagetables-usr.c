@@ -24,7 +24,7 @@ void print_bin(unsigned long val)
 	printf("%s", buf + PAGE_BITS - i);
 }
 
-static void write_pagetable(char *path, size_t count)
+static void print_pagetable(char *path, size_t count)
 {
 	int i;
 	unsigned long entry;
@@ -75,7 +75,7 @@ int main(void)
 	if (SKIP_KERNEL)
 		ptrs_per_pgd /= 2;
 
-	write_pagetable("/sys/kernel/debug/pagetables/pgd", ptrs_per_pgd);
+	print_pagetable("/sys/kernel/debug/pagetables/pgd", ptrs_per_pgd);
 
 	return EXIT_SUCCESS;
 }
