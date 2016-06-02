@@ -6,9 +6,9 @@
 #define _PAGE_PRESENT (1UL<<0)
 #define PAGE_BITS     12
 
-#define SKIP_KERNEL 1
-
 #define WORD_SIZE (sizeof(unsigned long))
+
+#define SKIP_KERNEL 1
 
 void print_bin(unsigned long val)
 {
