@@ -24,7 +24,7 @@ void print_bin(unsigned long val)
 	printf("%s", buf + PAGE_BITS - i);
 }
 
-static void print_pagetable(char *path, size_t count)
+static void print_pagetable(char *path, int count)
 {
 	int i;
 	unsigned long entry;
@@ -69,7 +69,7 @@ static void print_pagetable(char *path, size_t count)
 
 int main(void)
 {
-	size_t ptrs_per_pgd = (size_t)sysconf(_SC_PAGESIZE)/WORD_SIZE;
+	int ptrs_per_pgd = (int)sysconf(_SC_PAGESIZE)/WORD_SIZE;
 
 	/* Top half of PGD entries -> kernel mappings. */
 	if (SKIP_KERNEL)
