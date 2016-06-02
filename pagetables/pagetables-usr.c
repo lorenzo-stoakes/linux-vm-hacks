@@ -6,6 +6,8 @@
 #define _PAGE_PRESENT (1UL<<0)
 #define PAGE_BITS     12
 
+#define SKIP_KERNEL 1
+
 void print_bin(unsigned long val)
 {
 	int i;
@@ -34,6 +36,10 @@ int main(void)
 		perror("pagetables: error");
 		return EXIT_FAILURE;
 	}
+
+	/* Top half of PGD entries -> kernel mappings. */
+	if (SKIP_KERNEL)
+		ptrs_per_pgd /= 2;
 
 	for (i = 0; i < ptrs_per_pgd; i++) {
 		unsigned long phys_addr, flags;
