@@ -23,25 +23,24 @@ static const struct file_operations pgd_fops = {
 
 static int __init pagetables_init(void)
 {
-	struct dentry *pfile;
+	struct dentry *filep;
 
-	pfile = debugfs_create_dir("pagetables", NULL);
-	if (IS_ERR_OR_NULL(pfile))
-		goto error_dir;
+	filep = debugfs_create_dir("pagetables", NULL);
+	if (IS_ERR_OR_NULL(filep))
+		goto error;
 	else
-		pagetables_dir = pfile;
+		pagetables_dir = filep;
 
-	pfile = debugfs_create_file("pgd", 0400, pagetables_dir, NULL,
+	filep = debugfs_create_file("pgd", 0400, pagetables_dir, NULL,
 				&pgd_fops);
-	if (IS_ERR_OR_NULL(pfile))
+	if (IS_ERR_OR_NULL(filep))
 		goto error;
 
 	return 0;
 
  error:
 	debugfs_remove_recursive(pagetables_dir);
- error_dir:
-	return pfile ? PTR_ERR(pfile) : -ENOMEM;
+	return filep ? PTR_ERR(filep) : -ENOMEM;
 }
 
 static void __exit pagetables_exit(void)
