@@ -38,7 +38,7 @@ static int __init pagetables_init(void)
 
 	return 0;
 
- error:
+error:
 	debugfs_remove_recursive(pagetables_dir);
 	return filep ? PTR_ERR(filep) : -ENOMEM;
 }
