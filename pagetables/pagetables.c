@@ -9,8 +9,8 @@ MODULE_DESCRIPTION("Simple experimental tool for extracting page tables.");
 
 static struct dentry *pagetables_dir;
 
-static ssize_t pgd_read(struct file *file, char __user *out,
-			size_t size, loff_t *off)
+static ssize_t pgd_read(struct file *file, char __user *out, size_t size,
+			loff_t *off)
 {
 	return simple_read_from_buffer(out, size, off, current->mm->pgd,
 				sizeof(unsigned long) * PTRS_PER_PGD);
@@ -46,6 +46,7 @@ static int __init pagetables_init(void)
 
 static void __exit pagetables_exit(void)
 {
+	/* Does the right thing if pagetables_dir NULL. */
 	debugfs_remove_recursive(pagetables_dir);
 }
 
