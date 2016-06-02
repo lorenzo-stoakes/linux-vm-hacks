@@ -5,4 +5,4 @@
 *.o
 .*
 !.gitignore
-tables/tables
+pagetables/pagetables

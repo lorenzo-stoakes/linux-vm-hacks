@@ -29,9 +29,9 @@ int main(void)
 	unsigned long flags_mask = ptrs_per_pgd - 1;
 	unsigned long phys_addr_mask = ~flags_mask;
 
-	FILE *file = fopen("/sys/kernel/debug/tables/pgd", "r");
+	FILE *file = fopen("/sys/kernel/debug/pagetables/pgd", "r");
 	if (!file) {
-		perror("tables: error");
+		perror("pagetables: error");
 		return EXIT_FAILURE;
 	}
 
@@ -39,7 +39,7 @@ int main(void)
 		unsigned long phys_addr, flags;
 
 		if (fread(&entry, 1, word_size, file) != word_size) {
-			fprintf(stderr, "tables: error: read error\n");
+			fprintf(stderr, "pagetables: error: read error\n");
 			fclose(file);
 			return EXIT_FAILURE;
 		}

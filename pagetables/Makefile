@@ -1,17 +1,17 @@
 KERNEL_TREE_PATH?=/lib/modules/$(shell uname -r)/build
 
-obj-m += tables.o
+obj-m += pagetables.o
 
-all: tables tables.ko
+all: pagetables pagetables.ko
 
-tables: tables-usr.c
+pagetables: pagetables-usr.c
 	$(CC) -g -pedantic -Wall -Werror -o $@ $^
 
-tables.ko: tables.c
+pagetables.ko: pagetables.c
 	make -C $(KERNEL_TREE_PATH) M=$(PWD) modules
 
 clean:
-	rm -f tables
+	rm -f pagetables
 	make -C $(KERNEL_TREE_PATH) M=$(PWD) clean
 
 .PHONY: all clean

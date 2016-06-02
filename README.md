@@ -8,19 +8,19 @@ subsystem.
 
 ## Hacks
 
-### Tables
+### pagetables
 
 __Work in Progress__: Currently only the PGD is exposed.
 
-Tables is a kernel module which outputs the precise PGD/PUD/PMD/PTE page table
-contents for a given process.
+Pagetables is a kernel module which outputs the precise PGD/PUD/PMD/PTE page
+table contents for a given process.
 
 It differs from `/proc/<pid>/pagemap` ([doc page][page-map]) in that pagemap is
 vastly more useful :) it allows a process to map between virtual and physical
-pages without reference to individual page tables whereas `tables` is designed
-to expose these details.
+pages without reference to individual page tables whereas `pagetables` is
+designed to expose these details.
 
-Additionally, `tables` exposes kernel mappings.
+Additionally, `pagetables` exposes kernel mappings.
 
 #### Usage
 
@@ -28,13 +28,13 @@ __WARNING:__ Don't use this with a kernel you care about. It's experimental and
 I've probably made horrific mistakes which will result in data/hair/firstborn
 loss.
 
-Compilation should be as simple as `cd tables; make`. Then run `sudo insmod
-tables.ko` to insert the module, preferably in a VM.
+Compilation should be as simple as `cd pagetables; make`. Then run `sudo insmod
+pagetables.ko` to insert the module, preferably in a VM.
 
-The current process's PGD is exposed raw at `/sys/kernel/debug/tables/pgd`.
+The current process's PGD is exposed raw at `/sys/kernel/debug/pagetables/pgd`.
 
 There is a userland tool included which outputs PGD entries using this
-interface, simply run `sudo ./tables` from the `tables` directory.
+interface, simply run `sudo ./pagetables` from the `pagetables` directory.
 
 ## License
 

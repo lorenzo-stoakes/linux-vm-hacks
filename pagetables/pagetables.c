@@ -7,7 +7,7 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Lorenzo Stoakes <lstoakes@gmail.com>");
 MODULE_DESCRIPTION("Simple experimental tool for extracting page tables.");
 
-static struct dentry *tables_dir;
+static struct dentry *pagetables_dir;
 
 static ssize_t pgd_read(struct file *file, char __user *out,
 			size_t size, loff_t *off)
@@ -21,32 +21,33 @@ static const struct file_operations pgd_fops = {
 	.read = pgd_read
 };
 
-static int __init tables_init(void)
+static int __init pagetables_init(void)
 {
 	struct dentry *pfile;
 
-	pfile = debugfs_create_dir("tables", NULL);
+	pfile = debugfs_create_dir("pagetables", NULL);
 	if (IS_ERR_OR_NULL(pfile))
 		goto error_dir;
 	else
-		tables_dir = pfile;
+		pagetables_dir = pfile;
 
-	pfile = debugfs_create_file("pgd", 0400, tables_dir, NULL, &pgd_fops);
+	pfile = debugfs_create_file("pgd", 0400, pagetables_dir, NULL,
+				&pgd_fops);
 	if (IS_ERR_OR_NULL(pfile))
 		goto error;
 
 	return 0;
 
  error:
-	debugfs_remove_recursive(tables_dir);
+	debugfs_remove_recursive(pagetables_dir);
  error_dir:
 	return pfile ? PTR_ERR(pfile) : -ENOMEM;
 }
 
-static void __exit tables_exit(void)
+static void __exit pagetables_exit(void)
 {
-	debugfs_remove_recursive(tables_dir);
+	debugfs_remove_recursive(pagetables_dir);
 }
 
-module_init(tables_init);
-module_exit(tables_exit);
+module_init(pagetables_init);
+module_exit(pagetables_exit);
