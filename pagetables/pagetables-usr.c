@@ -7,6 +7,7 @@
 #define PAGE_BITS     12
 
 #define WORD_SIZE (sizeof(unsigned long))
+#define DEBUGFS_PATH "/sys/kernel/debug/pagetables/"
 
 #define SKIP_KERNEL 1
 
@@ -75,7 +76,7 @@ int main(void)
 	if (SKIP_KERNEL)
 		ptrs_per_pgd /= 2;
 
-	print_pagetable("/sys/kernel/debug/pagetables/pgd", ptrs_per_pgd);
+	print_pagetable(DEBUGFS_PATH "pgd", ptrs_per_pgd);
 
 	return EXIT_SUCCESS;
 }
