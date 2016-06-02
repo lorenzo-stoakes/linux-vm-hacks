@@ -5,7 +5,7 @@ obj-m += pagetables.o
 all: pagetables pagetables.ko
 
 pagetables: pagetables-usr.c
-	$(CC) -g -pedantic -Wall -Werror -o $@ $^
+	$(CC) -g --std=gnu89 -pedantic -Wall -Werror -o $@ $^
 
 pagetables.ko: pagetables.c
 	make -C $(KERNEL_TREE_PATH) M=$(PWD) modules
