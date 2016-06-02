@@ -2,10 +2,13 @@
 #include <linux/module.h>
 #include <linux/debugfs.h>
 #include <linux/sched.h>
+#include <asm/pgtable.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Lorenzo Stoakes <lstoakes@gmail.com>");
 MODULE_DESCRIPTION("Simple experimental tool for extracting page tables.");
+
+static size_t pgdindex;
 
 static struct dentry *pagetables_dir;
 
@@ -21,6 +24,30 @@ static const struct file_operations pgd_fops = {
 	.read = pgd_read
 };
 
+static ssize_t pud_read(struct file *file, char __user *out, size_t size,
+			loff_t *off)
+{
+	pgd_t pgd;
+	pud_t *pudp;
+
+	if (pgdindex >= PTRS_PER_PGD)
+		return -EINVAL;
+
+	pgd = current->mm->pgd[pgdindex];
+	if (pgd_none(pgd) || pgd_bad(pgd))
+		return -EINVAL;
+
+	pudp = (pud_t *)pgd_page_vaddr(pgd);
+
+	return simple_read_from_buffer(out, size, off, pudp,
+				sizeof(unsigned long) * PTRS_PER_PUD);
+}
+
+static const struct file_operations pud_fops = {
+	.owner = THIS_MODULE,
+	.read = pud_read
+};
+
 static int __init pagetables_init(void)
 {
 	struct dentry *filep;
@@ -33,6 +60,15 @@ static int __init pagetables_init(void)
 
 	filep = debugfs_create_file("pgd", 0400, pagetables_dir, NULL,
 				&pgd_fops);
+	if (IS_ERR_OR_NULL(filep))
+		goto error;
+
+	filep = debugfs_create_size_t("pgdindex", 0600, pagetables_dir, &pgdindex);
+	if (IS_ERR_OR_NULL(filep))
+		goto error;
+
+	filep = debugfs_create_file("pud", 0400, pagetables_dir, NULL,
+				&pud_fops);
 	if (IS_ERR_OR_NULL(filep))
 		goto error;
 
