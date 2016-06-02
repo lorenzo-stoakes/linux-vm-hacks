@@ -8,6 +8,8 @@
 
 #define SKIP_KERNEL 1
 
+#define WORD_SIZE (sizeof(unsigned long))
+
 void print_bin(unsigned long val)
 {
 	int i;
@@ -22,32 +24,26 @@ void print_bin(unsigned long val)
 	printf("%s", buf + PAGE_BITS - i);
 }
 
-int main(void)
+static void write_pagetable(char *path, size_t count)
 {
 	int i;
 	unsigned long entry;
-	size_t word_size = sizeof(unsigned long);
-	long ptrs_per_pgd = sysconf(_SC_PAGESIZE)/word_size;
-	unsigned long flags_mask = ptrs_per_pgd - 1;
+	unsigned long flags_mask = count - 1;
 	unsigned long phys_addr_mask = ~flags_mask;
 
-	FILE *file = fopen("/sys/kernel/debug/pagetables/pgd", "r");
+	FILE *file = fopen(path, "r");
 	if (!file) {
 		perror("pagetables: error");
-		return EXIT_FAILURE;
+		return;
 	}
 
-	/* Top half of PGD entries -> kernel mappings. */
-	if (SKIP_KERNEL)
-		ptrs_per_pgd /= 2;
-
-	for (i = 0; i < ptrs_per_pgd; i++) {
+	for (i = 0; i < count; i++) {
 		unsigned long phys_addr, flags;
 
-		if (fread(&entry, 1, word_size, file) != word_size) {
+		if (fread(&entry, 1, WORD_SIZE, file) != WORD_SIZE) {
 			fprintf(stderr, "pagetables: error: read error\n");
 			fclose(file);
-			return EXIT_FAILURE;
+			return;
 		}
 
 		/* Skip empty entries. */
@@ -67,6 +63,19 @@ int main(void)
 
 		printf("\n");
 	}
+
+	fclose(file);
+}
+
+int main(void)
+{
+	size_t ptrs_per_pgd = (size_t)sysconf(_SC_PAGESIZE)/WORD_SIZE;
+
+	/* Top half of PGD entries -> kernel mappings. */
+	if (SKIP_KERNEL)
+		ptrs_per_pgd /= 2;
+
+	write_pagetable("/sys/kernel/debug/pagetables/pgd", ptrs_per_pgd);
 
 	return EXIT_SUCCESS;
 }
