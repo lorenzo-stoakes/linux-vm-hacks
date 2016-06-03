@@ -98,8 +98,7 @@ static void print_pagetable(char *path, int count, int indent)
 
 		if (fread(&entry, 1, WORD_SIZE, file) != WORD_SIZE) {
 			fprintf(stderr, "pagetables: error: read error\n");
-			fclose(file);
-			return;
+			exit(1);
 		}
 
 		/* Skip empty entries. */
