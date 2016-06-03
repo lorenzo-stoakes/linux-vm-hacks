@@ -10,7 +10,7 @@ subsystem.
 
 ### pagetables
 
-__Work in Progress__: Currently only the PGD is exposed.
+__Work in Progress__: Currently only the PGD, PUD is exposed.
 
 Pagetables is a kernel module which outputs the precise PGD/PUD/PMD/PTE page
 table contents for a given process.
@@ -33,7 +33,9 @@ pagetables.ko` to insert the module, preferably in a VM.
 
 The current process's PGD is exposed raw at `/sys/kernel/debug/pagetables/pgd`.
 
-There is a userland tool included which outputs PGD entries using this
+A specific PGD entry can be selected by `/sys/kernel/debug/pagetables/pgdindex`, which will cause reads of `/sys/kernel/debug/pagetables/pud` to read the PUD page read by `pgd[pgdindex]`.
+
+There is a userland tool included which outputs page table entries using this
 interface, simply run `sudo ./pagetables` from the `pagetables` directory.
 
 ## License
