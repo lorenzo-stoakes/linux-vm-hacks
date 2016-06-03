@@ -43,7 +43,7 @@ static void print_pagetable(char *path, int count, int indent)
 	FILE *file = fopen(path, "r");
 	if (!file) {
 		perror("pagetables: error");
-		return;
+		exit(1);
 	}
 
 	for (i = 0; i < count; i++) {
