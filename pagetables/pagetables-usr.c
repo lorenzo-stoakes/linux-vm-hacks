@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -42,7 +43,8 @@ static void print_pagetable(char *path, int count, int indent)
 
 	FILE *file = fopen(path, "r");
 	if (!file) {
-		perror("pagetables: error");
+		fprintf(stderr, "pagetables: error opening %s: %s\n", path,
+			strerror(errno));
 		exit(1);
 	}
 
