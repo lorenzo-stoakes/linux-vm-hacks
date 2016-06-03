@@ -79,12 +79,14 @@ static void set_pgtable_index(int level, int index)
 	fclose(file);
 }
 
-static void print_pagetable(char *path, int count, int indent)
+static void print_pagetable(enum pgtable_level level)
 {
 	int i;
 	unsigned long entry;
+	int count = (int)sysconf(_SC_PAGESIZE)/WORD_SIZE;
 	unsigned long flags_mask = count - 1;
 	unsigned long phys_addr_mask = ~flags_mask;
+	char *path = get_level_path(level, 0);
 
 	FILE *file = fopen(path, "r");
 	if (!file) {
@@ -92,9 +94,14 @@ static void print_pagetable(char *path, int count, int indent)
 			strerror(errno));
 		exit(1);
 	}
+	free(path);
+
+	/* Top half of PGD entries -> kernel mappings. */
+	if (SKIP_KERNEL && level == PGD_LEVEL)
+		count /= 2;
 
 	for (i = 0; i < count; i++) {
-		unsigned long phys_addr, flags;
+		unsigned long phys_addr, flags, present;
 
 		if (fread(&entry, 1, WORD_SIZE, file) != WORD_SIZE) {
 			fprintf(stderr, "pagetables: error: read error\n");
@@ -105,12 +112,13 @@ static void print_pagetable(char *path, int count, int indent)
 		if (!entry)
 			continue;
 
-		flags = entry&flags_mask;
 		phys_addr = entry&phys_addr_mask;
+		flags = entry&flags_mask;
+		present = flags&_PAGE_PRESENT;
 
-		print_indent(indent);
+		print_indent(level);
 		printf("%03d: ", i);
-		if (flags&_PAGE_PRESENT)
+		if (present)
 			printf("%016lx ", phys_addr);
 		else
 			printf("<swapped> ");
@@ -118,6 +126,11 @@ static void print_pagetable(char *path, int count, int indent)
 		print_bin(flags);
 
 		printf("\n");
+
+		if (present && level < LEVEL_COUNT-1) {
+			set_pgtable_index(level, i);
+			print_pagetable(level + 1);
+		}
 	}
 
 	fclose(file);
@@ -125,13 +138,7 @@ static void print_pagetable(char *path, int count, int indent)
 
 int main(void)
 {
-	int ptrs_per_pgd = (int)sysconf(_SC_PAGESIZE)/WORD_SIZE;
-
-	/* Top half of PGD entries -> kernel mappings. */
-	if (SKIP_KERNEL)
-		ptrs_per_pgd /= 2;
-
-	print_pagetable(DEBUGFS_PATH "pgd", ptrs_per_pgd, 0);
+	print_pagetable(PGD_LEVEL);
 
 	return EXIT_SUCCESS;
 }
