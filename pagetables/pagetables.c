@@ -63,7 +63,8 @@ static int __init pagetables_init(void)
 	if (IS_ERR_OR_NULL(filep))
 		goto error;
 
-	filep = debugfs_create_size_t("pgdindex", 0600, pagetables_dir, &pgdindex);
+	filep = debugfs_create_size_t("pgdindex", 0600, pagetables_dir,
+				&pgdindex);
 	if (IS_ERR_OR_NULL(filep))
 		goto error;
 
