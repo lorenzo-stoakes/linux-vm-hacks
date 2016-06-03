@@ -8,7 +8,7 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Lorenzo Stoakes <lstoakes@gmail.com>");
 MODULE_DESCRIPTION("Simple experimental tool for extracting page tables.");
 
-static size_t pgdindex;
+static size_t pgdindex, pudindex;
 
 static struct dentry *pagetables_dir;
 
@@ -48,6 +48,36 @@ static const struct file_operations pud_fops = {
 	.read = pud_read
 };
 
+static ssize_t pmd_read(struct file *file, char __user *out, size_t size,
+			loff_t *off)
+{
+	pgd_t pgd;
+	pud_t *pudp, pud;
+	pmd_t *pmdp;
+
+	if (pgdindex >= PTRS_PER_PGD || pudindex >= PTRS_PER_PUD)
+		return -EINVAL;
+
+	pgd = current->mm->pgd[pgdindex];
+	if (pgd_none(pgd) || pgd_bad(pgd))
+		return -EINVAL;
+
+	pudp = (pud_t *)pgd_page_vaddr(pgd);
+	pud = pudp[pudindex];
+	if (pud_none(pud) || pud_bad(pud))
+		return -EINVAL;
+
+	pmdp = (pmd_t *)pud_page_vaddr(pud);
+
+	return simple_read_from_buffer(out, size, off, pmdp,
+				sizeof(unsigned long) * PTRS_PER_PMD);
+}
+
+static const struct file_operations pmd_fops = {
+	.owner = THIS_MODULE,
+	.read = pmd_read
+};
+
 static int __init pagetables_init(void)
 {
 	struct dentry *filep;
@@ -70,6 +100,16 @@ static int __init pagetables_init(void)
 
 	filep = debugfs_create_file("pud", 0400, pagetables_dir, NULL,
 				&pud_fops);
+	if (IS_ERR_OR_NULL(filep))
+		goto error;
+
+	filep = debugfs_create_size_t("pudindex", 0600, pagetables_dir,
+				&pudindex);
+	if (IS_ERR_OR_NULL(filep))
+		goto error;
+
+	filep = debugfs_create_file("pmd", 0400, pagetables_dir, NULL,
+				&pmd_fops);
 	if (IS_ERR_OR_NULL(filep))
 		goto error;
 
