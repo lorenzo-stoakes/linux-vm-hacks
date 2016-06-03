@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 /* Kinda assuming x86 here. */
@@ -9,8 +10,30 @@
 
 #define WORD_SIZE (sizeof(unsigned long))
 #define DEBUGFS_PATH "/sys/kernel/debug/pagetables/"
+#define DEBUGFS_PATH_LEN (sizeof(DEBUGFS_PATH))
 
 #define SKIP_KERNEL 1
+
+enum pgtable_level {
+	PGD_LEVEL,
+	PUD_LEVEL,
+	LEVEL_COUNT
+};
+
+char *level_name[LEVEL_COUNT] = {
+	"pgd",
+	"pud"
+};
+
+static char *get_level_path(enum pgtable_level level, int is_index)
+{
+	char buf[DEBUGFS_PATH_LEN + sizeof("xxxindex")];
+
+	sprintf(buf, DEBUGFS_PATH "%s%s", level_name[level],
+		is_index ? "index" : "");
+
+	return strdup(buf);
+}
 
 static void print_bin(unsigned long val)
 {
