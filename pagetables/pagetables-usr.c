@@ -57,6 +57,28 @@ static void print_indent(int level)
 		printf("\t");
 }
 
+static void set_pgtable_index(int level, int index)
+{
+	char index_str[4];
+	char *path = get_level_path(level, 1);
+	int len = sprintf(index_str, "%d", index);
+
+	FILE *file = fopen(path, "r+");
+	if (!file) {
+		fprintf(stderr, "pagetables: set_pgtable_index: error opening %s: %s\n", path,
+			strerror(errno));
+		exit(1);
+	}
+
+	if (fwrite(index_str, 1, len, file) != len) {
+		fprintf(stderr, "pagetables: write error at %s\n", path);
+		exit(1);
+	}
+
+	free(path);
+	fclose(file);
+}
+
 static void print_pagetable(char *path, int count, int indent)
 {
 	int i;
