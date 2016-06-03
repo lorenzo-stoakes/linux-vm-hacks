@@ -83,6 +83,7 @@ static void print_pagetable(enum pgtable_level level)
 {
 	int i;
 	unsigned long entry;
+	/* Ignoring transparent huge pages, etc. TODO: Deal properly. */
 	int count = (int)sysconf(_SC_PAGESIZE)/WORD_SIZE;
 	unsigned long flags_mask = count - 1;
 	unsigned long phys_addr_mask = ~flags_mask;
