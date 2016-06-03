@@ -64,11 +64,12 @@ static void set_pgtable_index(int level, int index)
 	char index_str[4];
 	char *path = get_level_path(level, 1);
 	int len = sprintf(index_str, "%d", index);
-
 	FILE *file = fopen(path, "r+");
+
 	if (!file) {
-		fprintf(stderr, "pagetables: set_pgtable_index: error opening %s: %s\n", path,
-			strerror(errno));
+		fprintf(stderr,
+			"pagetables: set_pgtable_index: error opening %s: %s\n",
+			path, strerror(errno));
 		exit(1);
 	}
 
@@ -90,8 +91,8 @@ static void print_pagetable(enum pgtable_level level)
 	unsigned long flags_mask = count - 1;
 	unsigned long phys_addr_mask = ~flags_mask;
 	char *path = get_level_path(level, 0);
-
 	FILE *file = fopen(path, "r");
+
 	if (!file) {
 		fprintf(stderr, "pagetables: error opening %s: %s\n", path,
 			strerror(errno));
