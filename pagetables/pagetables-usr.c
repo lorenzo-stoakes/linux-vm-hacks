@@ -11,7 +11,7 @@
 
 #define SKIP_KERNEL 1
 
-void print_bin(unsigned long val)
+static void print_bin(unsigned long val)
 {
 	int i;
 	char buf[PAGE_BITS];
