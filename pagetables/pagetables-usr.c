@@ -17,12 +17,14 @@
 enum pgtable_level {
 	PGD_LEVEL,
 	PUD_LEVEL,
+	PMD_LEVEL,
 	LEVEL_COUNT
 };
 
 char *level_name[LEVEL_COUNT] = {
 	"pgd",
-	"pud"
+	"pud",
+	"pmd"
 };
 
 static char *get_level_path(enum pgtable_level level, int is_index)
