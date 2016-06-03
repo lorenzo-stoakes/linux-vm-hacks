@@ -6,6 +6,7 @@
 
 /* Kinda assuming x86 here. */
 #define _PAGE_PRESENT (1UL<<0)
+#define _PAGE_PSE     (1UL<<7)
 #define PAGE_BITS     12
 
 #define WORD_SIZE (sizeof(unsigned long))
@@ -105,7 +106,7 @@ static void print_pagetable(enum pgtable_level level)
 		count /= 2;
 
 	for (i = 0; i < count; i++) {
-		unsigned long phys_addr, flags, present;
+		unsigned long phys_addr, flags, present, huge;
 
 		if (fread(&entry, 1, WORD_SIZE, file) != WORD_SIZE) {
 			fprintf(stderr, "pagetables: error: read error\n");
@@ -119,10 +120,14 @@ static void print_pagetable(enum pgtable_level level)
 		phys_addr = entry&phys_addr_mask;
 		flags = entry&flags_mask;
 		present = flags&_PAGE_PRESENT;
+		/* TODO: We just don't deal with huge pages yet, fix. */
+		huge = flags&_PAGE_PSE;
 
 		print_indent(level);
 		printf("%03d: ", i);
-		if (present)
+		if (huge)
+			printf("<huge> ");
+		else if (present)
 			printf("%016lx ", phys_addr);
 		else
 			printf("<swapped> ");
@@ -131,7 +136,7 @@ static void print_pagetable(enum pgtable_level level)
 
 		printf("\n");
 
-		if (present && level < LEVEL_COUNT-1) {
+		if (present && !huge && level < LEVEL_COUNT-1) {
 			set_pgtable_index(level, i);
 			print_pagetable(level + 1);
 		}
