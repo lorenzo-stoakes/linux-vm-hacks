@@ -7,6 +7,7 @@
 /* Kinda assuming x86 here. */
 #define _PAGE_PRESENT (1UL<<0)
 #define _PAGE_PSE     (1UL<<7)
+#define _PAGE_NX      (1UL<<63)
 #define PAGE_BITS     12
 #define MAX_PHYS_MASK ((1UL<<46)-1)
 
@@ -141,6 +142,9 @@ static void print_pagetable(enum pgtable_level level)
 			printf("<swapped> ");
 
 		print_bin(flags, FLAGS_MIN_BITS);
+
+		if (flags&_PAGE_NX)
+			printf(" NX");
 
 		printf("\n");
 
