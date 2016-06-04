@@ -45,7 +45,7 @@ static char *get_level_path(enum pgtable_level level, int is_index)
 static void print_bin(unsigned long val, int min_len)
 {
 	int i;
-	char buf[PAGE_BITS];
+	char buf[PAGE_BITS + 1];
 
 	buf[PAGE_BITS] = '\0';
 	for (i = 0; i < PAGE_BITS && val != 0; i++) {
