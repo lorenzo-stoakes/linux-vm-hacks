@@ -16,7 +16,7 @@
 #define DEBUGFS_PATH_LEN (sizeof(DEBUGFS_PATH))
 
 #define FLAGS_MIN_BITS PAGE_BITS
-#define SKIP_KERNEL    1
+#define HIDE_KERNEL    1
 
 enum pgtable_level {
 	PGD_LEVEL,
@@ -111,7 +111,7 @@ static void print_pagetable(enum pgtable_level level)
 	free(path);
 
 	/* Top half of PGD entries -> kernel mappings. */
-	if (SKIP_KERNEL && level == PGD_LEVEL)
+	if (HIDE_KERNEL && level == PGD_LEVEL)
 		count /= 2;
 
 	for (i = 0; i < count; i++) {
