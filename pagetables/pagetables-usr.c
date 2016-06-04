@@ -96,8 +96,9 @@ static void print_pagetable(enum pgtable_level level)
 	unsigned long entry;
 	/* Ignoring transparent huge pages, etc. TODO: Deal properly. */
 	int count = (int)sysconf(_SC_PAGESIZE)/WORD_SIZE;
-	unsigned long flags_mask = count - 1;
-	unsigned long phys_addr_mask = (~flags_mask) & MAX_PHYS_MASK;
+	unsigned long phys_addr_mask = (~(count - 1)) & MAX_PHYS_MASK;
+	unsigned long flags_mask = ~phys_addr_mask;
+
 	char *path = get_level_path(level, 0);
 	FILE *file = fopen(path, "r");
 
