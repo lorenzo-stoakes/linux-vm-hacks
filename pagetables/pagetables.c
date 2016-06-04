@@ -8,7 +8,7 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Lorenzo Stoakes <lstoakes@gmail.com>");
 MODULE_DESCRIPTION("Simple experimental tool for extracting page tables.");
 
-static size_t pgdindex, pudindex;
+static size_t pgdindex, pudindex, pmdindex;
 
 static struct dentry *pagetables_dir;
 
@@ -78,6 +78,44 @@ static const struct file_operations pmd_fops = {
 	.read = pmd_read
 };
 
+static ssize_t pte_read(struct file *file, char __user *out, size_t size,
+			loff_t *off)
+{
+	pgd_t pgd;
+	pud_t *pudp, pud;
+	pmd_t *pmdp, pmd;
+	pte_t *ptep;
+
+	if (pgdindex >= PTRS_PER_PGD || pudindex >= PTRS_PER_PUD ||
+		pmdindex >= PTRS_PER_PMD)
+		return -EINVAL;
+
+	pgd = current->mm->pgd[pgdindex];
+	if (pgd_none(pgd) || pgd_bad(pgd))
+		return -EINVAL;
+
+	pudp = (pud_t *)pgd_page_vaddr(pgd);
+	pud = pudp[pudindex];
+	if (pud_none(pud) || pud_bad(pud))
+		return -EINVAL;
+
+	pmdp = (pmd_t *)pud_page_vaddr(pud);
+	pmd = pmdp[pmdindex];
+	if (pmd_none(pmd) || pmd_bad(pmd))
+		return -EINVAL;
+
+	/* TODO: Perhaps we should enforce a lock here. */
+	ptep = (pte_t*)pmd_page_vaddr(pmd);
+
+	return simple_read_from_buffer(out, size, off, ptep,
+				sizeof(unsigned long) * PTRS_PER_PTE);
+}
+
+static const struct file_operations pte_fops = {
+	.owner = THIS_MODULE,
+	.read = pte_read
+};
+
 static int __init pagetables_init(void)
 {
 	struct dentry *filep;
@@ -110,6 +148,16 @@ static int __init pagetables_init(void)
 
 	filep = debugfs_create_file("pmd", 0400, pagetables_dir, NULL,
 				&pmd_fops);
+	if (IS_ERR_OR_NULL(filep))
+		goto error;
+
+	filep = debugfs_create_size_t("pmdindex", 0600, pagetables_dir,
+				&pmdindex);
+	if (IS_ERR_OR_NULL(filep))
+		goto error;
+
+	filep = debugfs_create_file("pte", 0400, pagetables_dir, NULL,
+				&pte_fops);
 	if (IS_ERR_OR_NULL(filep))
 		goto error;
 
