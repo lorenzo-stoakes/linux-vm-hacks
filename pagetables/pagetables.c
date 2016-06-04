@@ -4,6 +4,11 @@
 #include <linux/sched.h>
 #include <asm/pgtable.h>
 
+/*
+ * TODO: Is possible page reads could be non-atomic, check.
+ * TODO: Probably needs some locking, check.
+ */
+
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Lorenzo Stoakes <lstoakes@gmail.com>");
 MODULE_DESCRIPTION("Simple experimental tool for extracting page tables.");
