@@ -36,12 +36,12 @@ pagetables.ko` to insert the module, preferably in a VM.
 
 2. A specific PGD entry can be selected by
    `/sys/kernel/debug/pagetables/pgdindex`, which will cause reads of
-   `/sys/kernel/debug/pagetables/pud` to read the PUD page read by
+   `/sys/kernel/debug/pagetables/pud` to read the PUD page referred to by
    `pgd[pgdindex]`.
 
 3. A specific PUD entry can be selected by
    `/sys/kernel/debug/pagetables/pudindex`, which will cause reads of
-   `/sys/kernel/debug/pagetables/pmd` to read the PMD page read by
+   `/sys/kernel/debug/pagetables/pmd` to read the PMD page referred to by
    `pud[pudindex]`.
 
 There is a userland tool included which outputs page table entries using this
