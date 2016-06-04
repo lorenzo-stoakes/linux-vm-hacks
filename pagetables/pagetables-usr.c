@@ -14,7 +14,7 @@
 #define DEBUGFS_PATH "/sys/kernel/debug/pagetables/"
 #define DEBUGFS_PATH_LEN (sizeof(DEBUGFS_PATH))
 
-#define FLAGS_MIN_BITS 8
+#define FLAGS_MIN_BITS PAGE_BITS
 #define SKIP_KERNEL    1
 
 enum pgtable_level {
