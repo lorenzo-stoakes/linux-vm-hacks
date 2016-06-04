@@ -5,9 +5,13 @@
 #include <unistd.h>
 
 /* Kinda assuming x86 here. */
-#define _PAGE_PRESENT (1UL<<0)
-#define _PAGE_PSE     (1UL<<7)
-#define _PAGE_NX      (1UL<<63)
+#define _PAGE_PRESENT  (1UL<<0)
+#define _PAGE_RW       (1UL<<1)
+#define _PAGE_ACCESSED (1UL<<5)
+#define _PAGE_DIRTY    (1UL<<6)
+#define _PAGE_PSE      (1UL<<7)
+#define _PAGE_NX       (1UL<<63)
+
 #define PAGE_BITS     12
 #define MAX_PHYS_MASK ((1UL<<46)-1)
 
