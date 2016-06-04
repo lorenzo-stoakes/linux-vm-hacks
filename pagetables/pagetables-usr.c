@@ -8,12 +8,14 @@
 #define _PAGE_PRESENT (1UL<<0)
 #define _PAGE_PSE     (1UL<<7)
 #define PAGE_BITS     12
+#define MAX_PHYS_MASK ((1UL<<46)-1)
 
 #define WORD_SIZE (sizeof(unsigned long))
 #define DEBUGFS_PATH "/sys/kernel/debug/pagetables/"
 #define DEBUGFS_PATH_LEN (sizeof(DEBUGFS_PATH))
 
-#define SKIP_KERNEL 1
+#define FLAGS_MIN_BITS 8
+#define SKIP_KERNEL    1
 
 enum pgtable_level {
 	PGD_LEVEL,
@@ -40,7 +42,7 @@ static char *get_level_path(enum pgtable_level level, int is_index)
 	return strdup(buf);
 }
 
-static void print_bin(unsigned long val)
+static void print_bin(unsigned long val, int min_len)
 {
 	int i;
 	char buf[PAGE_BITS];
@@ -50,6 +52,9 @@ static void print_bin(unsigned long val)
 		buf[PAGE_BITS-1-i] = (val&1) ? '1' : '0';
 		val >>= 1;
 	}
+
+	for (; i < min_len; i++)
+		buf[PAGE_BITS-1-i] = '0';
 
 	printf("%s", buf + PAGE_BITS - i);
 }
@@ -134,7 +139,7 @@ static void print_pagetable(enum pgtable_level level)
 		else
 			printf("<swapped> ");
 
-		print_bin(flags);
+		print_bin(flags, FLAGS_MIN_BITS);
 
 		printf("\n");
 
