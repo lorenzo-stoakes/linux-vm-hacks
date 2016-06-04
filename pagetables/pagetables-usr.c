@@ -45,18 +45,18 @@ static char *get_level_path(enum pgtable_level level, int is_index)
 static void print_bin(unsigned long val, int min_len)
 {
 	int i;
-	char buf[PAGE_BITS + 1];
+	char buf[WORD_SIZE + 1];
 
-	buf[PAGE_BITS] = '\0';
-	for (i = 0; i < PAGE_BITS && val != 0; i++) {
-		buf[PAGE_BITS-1-i] = (val&1) ? '1' : '0';
+	buf[WORD_SIZE] = '\0';
+	for (i = 0; i < WORD_SIZE && val != 0; i++) {
+		buf[WORD_SIZE-1-i] = (val&1) ? '1' : '0';
 		val >>= 1;
 	}
 
 	for (; i < min_len; i++)
-		buf[PAGE_BITS-1-i] = '0';
+		buf[WORD_SIZE-1-i] = '0';
 
-	printf("%s", buf + PAGE_BITS - i);
+	printf("%s", buf + WORD_SIZE - i);
 }
 
 static void print_indent(int level)
