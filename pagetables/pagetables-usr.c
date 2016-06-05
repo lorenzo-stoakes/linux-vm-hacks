@@ -63,7 +63,7 @@ static int level_shift[LEVEL_COUNT] = {
 	PAGE_SHIFT
 };
 
-unsigned long level_mask[LEVEL_COUNT] = {
+static unsigned long level_mask[LEVEL_COUNT] = {
 	(PTRS_PER_PGD-1UL)<<PGDIR_SHIFT,
 	(PTRS_PER_PUD-1UL)<<PUD_SHIFT,
 	(PTRS_PER_PMD-1UL)<<PMD_SHIFT,
