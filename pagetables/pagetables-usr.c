@@ -126,7 +126,8 @@ static void print_pagetable(enum pgtable_level level)
 		unsigned long phys_addr, flags, present, huge;
 
 		if (fread(&entry, 1, WORD_SIZE, file) != WORD_SIZE) {
-			fprintf(stderr, "pagetables: error: read error\n");
+			fprintf(stderr, "pagetables: error: read error: %s\n",
+				strerror(errno));
 			exit(1);
 		}
 
