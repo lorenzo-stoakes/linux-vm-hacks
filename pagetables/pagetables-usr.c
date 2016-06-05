@@ -89,7 +89,8 @@ static char *human_suffix[] = {
 };
 
 static unsigned long vaddr;
-static int page_count[LEVEL_COUNT];
+/* +1 to take into account physical pages. */
+static int page_count[LEVEL_COUNT+1], rw_pte_count;
 
 static void set_target_pid(char *pid_str)
 {
