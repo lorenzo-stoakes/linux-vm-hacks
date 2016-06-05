@@ -45,8 +45,8 @@ $ sudo ./pagetables <pid, defaults to pagetables itself>
 
 ## License
 
-All code here is licensed under the [GPL v2][gpl-v2] license to remain
-compatible with the kernel itself.
+All code here is licensed under [GPL v2][gpl-v2] to remain compatible with the
+kernel itself.
 
 [vm-notes]:https://github.com/lorenzo-stoakes/linux-vm-notes
 [page-map]:https://github.com/torvalds/linux/blob/v4.6/Documentation/vm/pagemap.txt
