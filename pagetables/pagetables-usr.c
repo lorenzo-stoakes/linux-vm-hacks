@@ -70,7 +70,7 @@ unsigned long level_mask[LEVEL_COUNT] = {
 	(PTRS_PER_PTE-1UL)<<PAGE_SHIFT
 };
 
-static unsigned long vaddr = 0;
+static unsigned long vaddr;
 
 static void print_bin(unsigned long val, int min_len)
 {

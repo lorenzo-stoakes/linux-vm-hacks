@@ -103,7 +103,7 @@ static ssize_t pte_read(struct file *file, char __user *out, size_t size,
 		return -EINVAL;
 
 	/* TODO: Perhaps we should enforce a lock here. */
-	ptep = (pte_t*)pmd_page_vaddr(pmd);
+	ptep = (pte_t *)pmd_page_vaddr(pmd);
 
 	return simple_read_from_buffer(out, size, off, ptep,
 				sizeof(unsigned long) * PTRS_PER_PTE);
