@@ -94,7 +94,7 @@ static void print_indent(int level)
 	int i;
 
 	for (i = 0; i < level; i++)
-		printf("\t");
+		printf("   ");
 }
 
 static void update_vaddr(enum pgtable_level level, int index)
@@ -179,7 +179,7 @@ static void print_pagetable(enum pgtable_level level)
 		huge = flags&_PAGE_PSE;
 
 		print_indent(level);
-		printf("%03d: ", i);
+		printf("%03d ", i);
 		if (huge)
 			printf("<huge> ");
 		else if (present)
