@@ -213,16 +213,23 @@ static void print_pagetable(enum pgtable_level level)
 		count /= 2;
 
 	for (i = 0; i < count; i++) {
+		int valid = 1;
 		unsigned long phys_addr, flags, present, huge;
 
 		if (fread(&entry, 1, WORD_SIZE, file) != WORD_SIZE) {
-			fprintf(stderr, "pagetables: error: read error: %s\n",
-				strerror(errno));
-			exit(1);
+			if (errno == EINVAL) {
+				entry = 0;
+				valid = 0;
+			} else {
+				fprintf(stderr,
+					"pagetables: error: read error: %s\n",
+					strerror(errno));
+				exit(1);
+			}
 		}
 
 		/* Skip empty entries. */
-		if (!entry)
+		if (valid && !entry)
 			continue;
 
 		phys_addr = entry&phys_addr_mask;
@@ -233,6 +240,11 @@ static void print_pagetable(enum pgtable_level level)
 
 		print_indent(level);
 		printf("%03d ", i);
+		if (!valid) {
+			printf("<invalid>\n");
+			continue;
+		}
+
 		if (huge)
 			printf("<huge> ");
 		else if (present)
