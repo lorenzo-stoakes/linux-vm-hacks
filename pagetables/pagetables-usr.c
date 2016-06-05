@@ -268,6 +268,9 @@ static void print_pagetable(enum pgtable_level level)
 
 		/* Each entry is a page of the next level. */
 		page_count[level+1]++;
+
+		if (level == PTE_LEVEL && present && !huge && (flags&_PAGE_RW))
+		  rw_pte_count++;
 	}
 
 	fclose(file);
@@ -292,6 +295,10 @@ static void print_counts(void)
 
 	printf("\nTOTAL:\t\t%8d (", total);
 	print_human_bytes((unsigned long)total * PAGE_SIZE);
+	printf(")\n");
+
+	printf("\nTOTAL R/W PTEs:\t%8d (", rw_pte_count);
+	print_human_bytes((unsigned long)rw_pte_count * PAGE_SIZE);
 	printf(")\n");
 }
 
