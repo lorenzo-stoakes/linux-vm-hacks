@@ -30,7 +30,7 @@ enum pgtable_level {
 	LEVEL_COUNT
 };
 
-char *level_name[LEVEL_COUNT] = {
+static char *level_name[LEVEL_COUNT] = {
 	"pgd",
 	"pud",
 	"pmd",
