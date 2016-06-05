@@ -26,8 +26,13 @@ __WARNING:__ Don't use this with a kernel you care about. It's experimental and
 I've probably made horrific mistakes which will result in data/hair/firstborn
 loss.
 
+__EVEN MORE SERIOUS WARNING:__ This module is a security nightmare and is
+exposing sensitive data. You've been warned!
+
 Compilation should be as simple as `cd pagetables; make`. Then run `sudo insmod
 pagetables.ko` to insert the module, preferably in a VM.
+
+
 
 1. The current process's PGD is exposed raw at
    `/sys/kernel/debug/pagetables/pgd`.
