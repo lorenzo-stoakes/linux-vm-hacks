@@ -6,9 +6,7 @@ designed to help me better understand the linux VM subsystem.
 This project's sister repo, [linux-vm-notes][vm-notes] contains notes on the
 subsystem.
 
-## Hacks
-
-### pagetables
+## pagetables
 
 Pagetables is a kernel module which outputs the precise PGD/PUD/PMD/PTE page
 table contents for a given process.
@@ -20,14 +18,14 @@ designed to expose these details.
 
 Additionally, `pagetables` exposes kernel mappings.
 
-#### Building
+### Building
 
 ```
 $ cd pagetables
 $ make
 ```
 
-#### Usage
+### Usage
 
 __WARNING:__ Don't use this with a kernel you care about. It's experimental and
 I've probably made horrific mistakes which will result in data/hair/firstborn
