@@ -14,13 +14,43 @@ MODULE_AUTHOR("Lorenzo Stoakes <lstoakes@gmail.com>");
 MODULE_DESCRIPTION("Simple experimental tool for extracting page tables.");
 
 static u64 vaddr;
-
+static pid_t target_pid_nr;
 static struct dentry *pagetables_dir;
+
+static struct mm_struct *get_mm(void)
+{
+	struct task_struct *task;
+	struct pid *pid;
+	struct mm_struct *ret = NULL;
+
+	if (target_pid_nr == 0)
+		return current->mm;
+
+	rcu_read_lock();
+
+	pid = find_vpid(target_pid_nr);
+	if (pid == NULL)
+		goto done;
+
+	task = pid_task(pid, PIDTYPE_PID);
+	if (!task)
+		goto done;
+
+	ret = task->mm;
+done:
+	rcu_read_unlock();
+	return ret;
+}
 
 static ssize_t pgd_read(struct file *file, char __user *out, size_t size,
 			loff_t *off)
 {
-	return simple_read_from_buffer(out, size, off, current->mm->pgd,
+	struct mm_struct *mm = get_mm();
+
+	if (!mm)
+		return -ESRCH;
+
+	return simple_read_from_buffer(out, size, off, mm->pgd,
 				sizeof(unsigned long) * PTRS_PER_PGD);
 }
 
@@ -34,8 +64,12 @@ static ssize_t pud_read(struct file *file, char __user *out, size_t size,
 {
 	pgd_t *pgdp, pgd;
 	pud_t *pudp;
+	struct mm_struct *mm = get_mm();
 
-	pgdp = pgd_offset(current->mm, vaddr);
+	if (!mm)
+		return -ESRCH;
+
+	pgdp = pgd_offset(mm, vaddr);
 	pgd = *pgdp;
 	if (pgd_none(pgd) || pgd_bad(pgd))
 		return -EINVAL;
@@ -57,8 +91,12 @@ static ssize_t pmd_read(struct file *file, char __user *out, size_t size,
 	pgd_t *pgdp, pgd;
 	pud_t *pudp, pud;
 	pmd_t *pmdp;
+	struct mm_struct *mm = get_mm();
 
-	pgdp = pgd_offset(current->mm, vaddr);
+	if (!mm)
+		return -ESRCH;
+
+	pgdp = pgd_offset(mm, vaddr);
 	pgd = *pgdp;
 	if (pgd_none(pgd) || pgd_bad(pgd))
 		return -EINVAL;
@@ -86,8 +124,12 @@ static ssize_t pte_read(struct file *file, char __user *out, size_t size,
 	pud_t *pudp, pud;
 	pmd_t *pmdp, pmd;
 	pte_t *ptep;
+	struct mm_struct *mm = get_mm();
 
-	pgdp = pgd_offset(current->mm, vaddr);
+	if (!mm)
+		return -ESRCH;
+
+	pgdp = pgd_offset(mm, vaddr);
 	pgd = *pgdp;
 	if (pgd_none(pgd) || pgd_bad(pgd))
 		return -EINVAL;
@@ -127,6 +169,11 @@ static int __init pagetables_init(void)
 
 	filep = debugfs_create_x64("vaddr", 0600, pagetables_dir,
 				&vaddr);
+	if (IS_ERR_OR_NULL(filep))
+		goto error;
+
+	filep = debugfs_create_u32("pid", 0600, pagetables_dir,
+				&target_pid_nr);
 	if (IS_ERR_OR_NULL(filep))
 		goto error;
 

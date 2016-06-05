@@ -33,13 +33,14 @@ __WARNING:__ Don't use this with a kernel you care about. It's experimental and
 I've probably made horrific mistakes which will result in data/hair/firstborn
 loss.
 
-__EVEN MORE SERIOUS WARNING:__ This module is a security nightmare and is
-exposing sensitive data. You've been warned!
+__EVEN MORE SERIOUS WARNING:__ This module is a security nightmare and exposes
+sensitive data, including kernel mappings and the mappings of any specified
+process. You've been warned!
 
 ```
 $ cd pagetables
 $ sudo insmod pagetables.ko
-$ sudo ./pagetables
+$ sudo ./pagetables <pid, defaults to pagetables itself>
 ```
 
 ## License

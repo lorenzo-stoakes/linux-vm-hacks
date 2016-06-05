@@ -31,6 +31,7 @@
 #define WORD_SIZE (sizeof(unsigned long))
 #define DEBUGFS_PATH "/sys/kernel/debug/pagetables/"
 #define VADDR_PATH DEBUGFS_PATH "vaddr"
+#define TARGET_PID_PATH DEBUGFS_PATH "pid"
 
 #define FLAGS_MIN_BITS PAGE_BITS
 #define HIDE_KERNEL    1
@@ -89,6 +90,27 @@ static char *human_suffix[] = {
 
 static unsigned long vaddr;
 static int page_counts[LEVEL_COUNT];
+
+static void set_target_pid(char *pid_str)
+{
+	FILE *file = fopen(TARGET_PID_PATH, "r+");
+	int len = strlen(pid_str);
+
+	if (!file) {
+		fprintf(stderr,
+			"pagetables: set_target_pid: error opening %s: %s\n",
+			TARGET_PID_PATH, strerror(errno));
+		exit(1);
+	}
+
+	if (fwrite(pid_str, 1, len, file) != len) {
+		fprintf(stderr, "pagetables: set_target_pid: write error at %s\n",
+			TARGET_PID_PATH);
+		exit(1);
+	}
+
+	fclose(file);
+}
 
 static void print_human_bytes(unsigned long bytes)
 {
@@ -260,8 +282,11 @@ static void print_counts(void)
 	printf(")\n");
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
+	if (argc > 1)
+		set_target_pid(argv[1]);
+
 	print_pagetable(PGD_LEVEL);
 	print_counts();
 
