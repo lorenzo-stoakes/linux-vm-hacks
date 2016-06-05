@@ -13,7 +13,7 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Lorenzo Stoakes <lstoakes@gmail.com>");
 MODULE_DESCRIPTION("Simple experimental tool for extracting page tables.");
 
-static size_t pgdindex, pudindex, pmdindex;
+static u64 vaddr;
 
 static struct dentry *pagetables_dir;
 
@@ -32,13 +32,11 @@ static const struct file_operations pgd_fops = {
 static ssize_t pud_read(struct file *file, char __user *out, size_t size,
 			loff_t *off)
 {
-	pgd_t pgd;
+	pgd_t *pgdp, pgd;
 	pud_t *pudp;
 
-	if (pgdindex >= PTRS_PER_PGD)
-		return -EINVAL;
-
-	pgd = current->mm->pgd[pgdindex];
+	pgdp = pgd_offset(current->mm, vaddr);
+	pgd = *pgdp;
 	if (pgd_none(pgd) || pgd_bad(pgd))
 		return -EINVAL;
 
@@ -56,19 +54,17 @@ static const struct file_operations pud_fops = {
 static ssize_t pmd_read(struct file *file, char __user *out, size_t size,
 			loff_t *off)
 {
-	pgd_t pgd;
+	pgd_t *pgdp, pgd;
 	pud_t *pudp, pud;
 	pmd_t *pmdp;
 
-	if (pgdindex >= PTRS_PER_PGD || pudindex >= PTRS_PER_PUD)
-		return -EINVAL;
-
-	pgd = current->mm->pgd[pgdindex];
+	pgdp = pgd_offset(current->mm, vaddr);
+	pgd = *pgdp;
 	if (pgd_none(pgd) || pgd_bad(pgd))
 		return -EINVAL;
 
-	pudp = (pud_t *)pgd_page_vaddr(pgd);
-	pud = pudp[pudindex];
+	pudp = pud_offset(pgdp, vaddr);
+	pud = *pudp;
 	if (pud_none(pud) || pud_bad(pud))
 		return -EINVAL;
 
@@ -86,26 +82,23 @@ static const struct file_operations pmd_fops = {
 static ssize_t pte_read(struct file *file, char __user *out, size_t size,
 			loff_t *off)
 {
-	pgd_t pgd;
+	pgd_t *pgdp, pgd;
 	pud_t *pudp, pud;
 	pmd_t *pmdp, pmd;
 	pte_t *ptep;
 
-	if (pgdindex >= PTRS_PER_PGD || pudindex >= PTRS_PER_PUD ||
-		pmdindex >= PTRS_PER_PMD)
-		return -EINVAL;
-
-	pgd = current->mm->pgd[pgdindex];
+	pgdp = pgd_offset(current->mm, vaddr);
+	pgd = *pgdp;
 	if (pgd_none(pgd) || pgd_bad(pgd))
 		return -EINVAL;
 
-	pudp = (pud_t *)pgd_page_vaddr(pgd);
-	pud = pudp[pudindex];
+	pudp = pud_offset(pgdp, vaddr);
+	pud = *pudp;
 	if (pud_none(pud) || pud_bad(pud))
 		return -EINVAL;
 
-	pmdp = (pmd_t *)pud_page_vaddr(pud);
-	pmd = pmdp[pmdindex];
+	pmdp = pmd_offset(pudp, vaddr);
+	pmd = *pmdp;
 	if (pmd_none(pmd) || pmd_bad(pmd))
 		return -EINVAL;
 
@@ -131,13 +124,14 @@ static int __init pagetables_init(void)
 	else
 		pagetables_dir = filep;
 
-	filep = debugfs_create_file("pgd", 0400, pagetables_dir, NULL,
-				&pgd_fops);
+
+	filep = debugfs_create_x64("vaddr", 0600, pagetables_dir,
+				&vaddr);
 	if (IS_ERR_OR_NULL(filep))
 		goto error;
 
-	filep = debugfs_create_size_t("pgdindex", 0600, pagetables_dir,
-				&pgdindex);
+	filep = debugfs_create_file("pgd", 0400, pagetables_dir, NULL,
+				&pgd_fops);
 	if (IS_ERR_OR_NULL(filep))
 		goto error;
 
@@ -146,18 +140,8 @@ static int __init pagetables_init(void)
 	if (IS_ERR_OR_NULL(filep))
 		goto error;
 
-	filep = debugfs_create_size_t("pudindex", 0600, pagetables_dir,
-				&pudindex);
-	if (IS_ERR_OR_NULL(filep))
-		goto error;
-
 	filep = debugfs_create_file("pmd", 0400, pagetables_dir, NULL,
 				&pmd_fops);
-	if (IS_ERR_OR_NULL(filep))
-		goto error;
-
-	filep = debugfs_create_size_t("pmdindex", 0600, pagetables_dir,
-				&pmdindex);
 	if (IS_ERR_OR_NULL(filep))
 		goto error;
 

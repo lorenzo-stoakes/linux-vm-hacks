@@ -15,13 +15,21 @@
 #define _PAGE_DIRTY    (1UL<<6)
 #define _PAGE_PSE      (1UL<<7)
 #define _PAGE_NX       (1UL<<63)
+#define PTRS_PER_PGD   512
+#define PTRS_PER_PUD   512
+#define PTRS_PER_PMD   512
+#define PTRS_PER_PTE   512
+#define PGDIR_SHIFT    39
+#define PUD_SHIFT      30
+#define PMD_SHIFT      21
+#define PAGE_SHIFT     12
 
 #define PAGE_BITS     12
 #define MAX_PHYS_MASK ((1UL<<46)-1)
 
 #define WORD_SIZE (sizeof(unsigned long))
 #define DEBUGFS_PATH "/sys/kernel/debug/pagetables/"
-#define DEBUGFS_PATH_LEN (sizeof(DEBUGFS_PATH))
+#define VADDR_PATH DEBUGFS_PATH "vaddr"
 
 #define FLAGS_MIN_BITS PAGE_BITS
 #define HIDE_KERNEL    1
@@ -34,22 +42,35 @@ enum pgtable_level {
 	LEVEL_COUNT
 };
 
-static char *level_name[LEVEL_COUNT] = {
-	"pgd",
-	"pud",
-	"pmd",
-	"pte"
+static char *level_path[LEVEL_COUNT] = {
+	DEBUGFS_PATH "pgd",
+	DEBUGFS_PATH "pud",
+	DEBUGFS_PATH "pmd",
+	DEBUGFS_PATH "pte"
 };
 
-static char *get_level_path(enum pgtable_level level, int is_index)
-{
-	char buf[DEBUGFS_PATH_LEN + sizeof("xxxindex")];
+static int level_size[LEVEL_COUNT] = {
+	PTRS_PER_PGD,
+	PTRS_PER_PUD,
+	PTRS_PER_PMD,
+	PTRS_PER_PTE
+};
 
-	sprintf(buf, DEBUGFS_PATH "%s%s", level_name[level],
-		is_index ? "index" : "");
+static int level_shift[LEVEL_COUNT] = {
+	PGDIR_SHIFT,
+	PUD_SHIFT,
+	PMD_SHIFT,
+	PAGE_SHIFT
+};
 
-	return strdup(buf);
-}
+unsigned long level_mask[LEVEL_COUNT] = {
+	(PTRS_PER_PGD-1UL)<<PGDIR_SHIFT,
+	(PTRS_PER_PUD-1UL)<<PUD_SHIFT,
+	(PTRS_PER_PMD-1UL)<<PMD_SHIFT,
+	(PTRS_PER_PTE-1UL)<<PAGE_SHIFT
+};
+
+static unsigned long vaddr = 0;
 
 static void print_bin(unsigned long val, int min_len)
 {
@@ -76,27 +97,45 @@ static void print_indent(int level)
 		printf("\t");
 }
 
-static void set_pgtable_index(int level, int index)
+static void update_vaddr(enum pgtable_level level, int index)
 {
-	char index_str[4];
-	char *path = get_level_path(level, 1);
-	int len = sprintf(index_str, "%d", index);
-	FILE *file = fopen(path, "r+");
+	vaddr &= ~level_mask[level];
+	vaddr |= ((unsigned long)index << level_shift[level]);
+}
+
+static void sync_vaddr(void)
+{
+	char buf[sizeof("0xdeadbeefdeadbeef")];
+	FILE *file = fopen(VADDR_PATH, "r+");
+	int len;
 
 	if (!file) {
 		fprintf(stderr,
-			"pagetables: set_pgtable_index: error opening %s: %s\n",
-			path, strerror(errno));
+			"pagetables: sync_vaddr: error opening %s: %s\n",
+			VADDR_PATH, strerror(errno));
 		exit(1);
 	}
 
-	if (fwrite(index_str, 1, len, file) != len) {
-		fprintf(stderr, "pagetables: write error at %s\n", path);
+	len = snprintf(buf, sizeof(buf), "0x%lx", vaddr);
+	if (len >= sizeof(buf)) {
+		fprintf(stderr,
+			"pagetables: sync_vaddr: attempted write %d, >= %lu.\n",
+			len, sizeof(buf));
 		exit(1);
 	}
 
-	free(path);
+	if (fwrite(buf, 1, len, file) != len) {
+		fprintf(stderr, "pagetables: write error at %s\n", VADDR_PATH);
+		exit(1);
+	}
+
 	fclose(file);
+}
+
+static void update_sync_vaddr(enum pgtable_level level, int index)
+{
+	update_vaddr(level, index);
+	sync_vaddr();
 }
 
 static void print_pagetable(enum pgtable_level level)
@@ -104,19 +143,17 @@ static void print_pagetable(enum pgtable_level level)
 	int i;
 	unsigned long entry;
 	/* Ignoring transparent huge pages, etc. TODO: Deal properly. */
-	int count = (int)sysconf(_SC_PAGESIZE)/WORD_SIZE;
+	int count = level_size[level];
 	unsigned long phys_addr_mask = (~(count - 1)) & MAX_PHYS_MASK;
 	unsigned long flags_mask = ~phys_addr_mask;
 
-	char *path = get_level_path(level, 0);
-	FILE *file = fopen(path, "r");
+	FILE *file = fopen(level_path[level], "r");
 
 	if (!file) {
-		fprintf(stderr, "pagetables: error opening %s: %s\n", path,
-			strerror(errno));
+		fprintf(stderr, "pagetables: error opening %s: %s\n",
+			level_path[level], strerror(errno));
 		exit(1);
 	}
-	free(path);
 
 	/* Top half of PGD entries -> kernel mappings. */
 	if (HIDE_KERNEL && level == PGD_LEVEL)
@@ -158,7 +195,8 @@ static void print_pagetable(enum pgtable_level level)
 		printf("\n");
 
 		if (present && !huge && level < LEVEL_COUNT-1) {
-			set_pgtable_index(level, i);
+			update_sync_vaddr(level, i);
+
 			print_pagetable(level + 1);
 		}
 	}
