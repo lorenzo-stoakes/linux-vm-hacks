@@ -306,6 +306,8 @@ int main(int argc, char *argv[])
 {
 	if (argc > 1)
 		set_target_pid(argv[1]);
+	else
+		set_target_pid("0");
 
 	print_pagetable(PGD_LEVEL);
 	print_counts();
