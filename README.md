@@ -20,6 +20,13 @@ designed to expose these details.
 
 Additionally, `pagetables` exposes kernel mappings.
 
+#### Building
+
+```
+$ cd pagetables
+$ make
+```
+
 #### Usage
 
 __WARNING:__ Don't use this with a kernel you care about. It's experimental and
@@ -29,31 +36,11 @@ loss.
 __EVEN MORE SERIOUS WARNING:__ This module is a security nightmare and is
 exposing sensitive data. You've been warned!
 
-Compilation should be as simple as `cd pagetables; make`. Then run `sudo insmod
-pagetables.ko` to insert the module, preferably in a VM.
-
-
-
-1. The current process's PGD is exposed raw at
-   `/sys/kernel/debug/pagetables/pgd`.
-
-2. A specific PGD entry can be selected by
-   `/sys/kernel/debug/pagetables/pgdindex`, which will cause reads of
-   `/sys/kernel/debug/pagetables/pud` to read the PUD page referred to by
-   `pgd[pgdindex]`.
-
-3. A specific PUD entry can be selected by
-   `/sys/kernel/debug/pagetables/pudindex`, which will cause reads of
-   `/sys/kernel/debug/pagetables/pmd` to read the PMD page referred to by
-   `pud[pudindex]`.
-
-4. A specific PMD entry can be selected by
-   `/sys/kernel/debug/pagetables/pmdindex`, which will cause reads of
-   `/sys/kernel/debug/pagetables/pte` to read the PTE page referred to by
-   `pmd[pmdindex]`.
-
-There is a userland tool included which outputs page table entries using this
-interface, simply run `sudo ./pagetables` from the `pagetables` directory.
+```
+$ cd pagetables
+$ sudo insmod pagetables.ko
+$ sudo ./pagetables
+```
 
 ## License
 
