@@ -259,7 +259,7 @@ static void print_pagetable(enum pgtable_level level)
 
 		printf("\n");
 
-		if (present && !huge && level < LEVEL_COUNT-1) {
+		if (present && !huge && level < PTE_LEVEL) {
 			update_sync_vaddr(level, i);
 
 			print_pagetable(level + 1);
