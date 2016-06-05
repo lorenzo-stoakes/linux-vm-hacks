@@ -25,6 +25,7 @@
 #define PAGE_SHIFT     12
 
 #define PAGE_BITS     12
+#define PAGE_SIZE     (1<<12)
 #define MAX_PHYS_MASK ((1UL<<46)-1)
 
 #define WORD_SIZE (sizeof(unsigned long))
@@ -40,6 +41,14 @@ enum pgtable_level {
 	PMD_LEVEL,
 	PTE_LEVEL,
 	LEVEL_COUNT
+};
+
+static char *level_name[LEVEL_COUNT+1] = {
+	"PGD",
+	"PUD",
+	"PMD",
+	"PTE",
+	"Physical"
 };
 
 static char *level_path[LEVEL_COUNT] = {
@@ -70,7 +79,29 @@ static unsigned long level_mask[LEVEL_COUNT] = {
 	(PTRS_PER_PTE-1UL)<<PAGE_SHIFT
 };
 
+static char *human_suffix[] = {
+	"",
+	"KiB",
+	"MiB",
+	"GiB",
+	"TiB"
+};
+
 static unsigned long vaddr;
+static int page_counts[LEVEL_COUNT];
+
+static void print_human_bytes(unsigned long bytes)
+{
+	int suffix_ind = 0;
+	double bytesf = (double)bytes;
+
+	while (bytesf > 1024) {
+		suffix_ind++;
+		bytesf /= 1024;
+	}
+
+	printf("%6.1f %s", bytesf, human_suffix[suffix_ind]);
+}
 
 static void print_bin(unsigned long val, int min_len)
 {
@@ -199,14 +230,40 @@ static void print_pagetable(enum pgtable_level level)
 
 			print_pagetable(level + 1);
 		}
+
+		/* Each entry is a page of the next level. */
+		page_counts[level+1]++;
 	}
 
 	fclose(file);
 }
 
+static void print_counts(void)
+{
+	int i, count;
+	int total = 0;
+
+	puts("\n== Page Counts ==\n");
+	/* <= to include physical pages too. */
+	for (i = 1; i <= LEVEL_COUNT; i++) {
+		count = page_counts[i];
+
+		printf("%s pages:\t%8d (", level_name[i], count);
+		print_human_bytes((unsigned long)count * PAGE_SIZE);
+		printf(")\n");
+
+		total += count;
+	}
+
+	printf("\nTOTAL:\t\t%8d (", total);
+	print_human_bytes((unsigned long)total * PAGE_SIZE);
+	printf(")\n");
+}
+
 int main(void)
 {
 	print_pagetable(PGD_LEVEL);
+	print_counts();
 
 	return EXIT_SUCCESS;
 }
