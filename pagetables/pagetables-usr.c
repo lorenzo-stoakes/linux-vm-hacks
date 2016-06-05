@@ -245,12 +245,12 @@ static void print_pagetable(enum pgtable_level level)
 			continue;
 		}
 
-		if (huge)
-			printf("<huge> ");
-		else if (present)
-			printf("%016lx ", phys_addr);
+		if (!present)
+			printf("   <not present> ");
+		else if (huge)
+			printf("          <huge> ");
 		else
-			printf("<swapped> ");
+			printf("%016lx ", phys_addr);
 
 		print_bin(flags, FLAGS_MIN_BITS);
 
