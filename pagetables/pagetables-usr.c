@@ -4,7 +4,11 @@
 #include <string.h>
 #include <unistd.h>
 
-/* Kinda assuming x86 here. */
+#if __SIZEOF_POINTER__ != 8
+#error 64-bit only, sorry.
+#endif
+
+/* Kinda assuming x86-64 here. */
 #define _PAGE_PRESENT  (1UL<<0)
 #define _PAGE_RW       (1UL<<1)
 #define _PAGE_ACCESSED (1UL<<5)
