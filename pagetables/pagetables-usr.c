@@ -89,7 +89,7 @@ static char *human_suffix[] = {
 };
 
 static unsigned long vaddr;
-static int page_counts[LEVEL_COUNT];
+static int page_count[LEVEL_COUNT];
 
 static void set_target_pid(char *pid_str)
 {
@@ -266,7 +266,7 @@ static void print_pagetable(enum pgtable_level level)
 		}
 
 		/* Each entry is a page of the next level. */
-		page_counts[level+1]++;
+		page_count[level+1]++;
 	}
 
 	fclose(file);
@@ -280,7 +280,7 @@ static void print_counts(void)
 	puts("\n== Page Counts ==\n");
 	/* <= to include physical pages too. */
 	for (i = 1; i <= LEVEL_COUNT; i++) {
-		count = page_counts[i];
+		count = page_count[i];
 
 		printf("%s pages:\t%8d (", level_name[i], count);
 		print_human_bytes((unsigned long)count * PAGE_SIZE);
