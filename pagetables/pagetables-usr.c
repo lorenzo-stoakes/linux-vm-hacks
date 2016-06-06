@@ -37,8 +37,14 @@
 #define FLAGS_MIN_BITS  PAGE_BITS
 #define INVALID_ENTRY   -1
 
-#define FLAGS_MIN_BITS PAGE_BITS
-#define HIDE_KERNEL    1
+/* User-defined: */
+#define HIDE_KERNEL 1
+#define HIDE_USER   0
+#define STATS_ONLY  0
+
+#if HIDE_KERNEL && HIDE_USER
+#error Choose HIDE_KERNEL _or_ HIDE_USER.
+#endif
 
 enum pgtable_level {
 	PGD_LEVEL,
@@ -249,7 +255,7 @@ static void update_stats(enum pgtable_level level, unsigned long entry)
 
 static void print_pagetable(enum pgtable_level level)
 {
-	int i;
+	int i, start = 0;
 	unsigned long entry;
 	/* Ignoring transparent huge pages, etc. TODO: Deal properly. */
 	int count = level_size[level];
@@ -263,10 +269,21 @@ static void print_pagetable(enum pgtable_level level)
 	}
 
 	/* Top half of PGD entries -> kernel mappings. */
-	if (HIDE_KERNEL && level == PGD_LEVEL)
+	if (HIDE_KERNEL && level == PGD_LEVEL) {
 		count /= 2;
+	} else if (HIDE_USER && level == PGD_LEVEL) {
+		/* fseek() seems not to work for sysfs files. */
+		for (i = 0; i < count/2; i++) {
+			if (fread(&entry, 1, WORD_SIZE, file) != WORD_SIZE) {
+				fprintf(stderr, "pagetables: error: seek error: %s\n",
+					strerror(errno));
+				exit(1);
+			}
+		}
+		start = count/2;
+	}
 
-	for (i = 0; i < count; i++) {
+	for (i = start; i < count; i++) {
 		int valid = 1;
 		int present, huge;
 
@@ -289,7 +306,9 @@ static void print_pagetable(enum pgtable_level level)
 		present = entry&_PAGE_PRESENT;
 		huge = entry&_PAGE_PSE;
 
-		print_entry(valid ? i : INVALID_ENTRY, level, entry);
+		if (!STATS_ONLY)
+			print_entry(valid ? i : INVALID_ENTRY, level, entry);
+
 		update_stats(level, entry);
 
 		if (present && !huge && level < PTE_LEVEL) {
