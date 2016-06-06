@@ -30,10 +30,12 @@
 #define PAGE_SIZE     (1<<12)
 #define MAX_PHYS_MASK ((1UL<<46)-1)
 
-#define WORD_SIZE (sizeof(unsigned long))
-#define DEBUGFS_PATH "/sys/kernel/debug/pagetables/"
-#define VADDR_PATH DEBUGFS_PATH "vaddr"
+#define WORD_SIZE       (sizeof(unsigned long))
+#define DEBUGFS_PATH    "/sys/kernel/debug/pagetables/"
+#define VADDR_PATH      DEBUGFS_PATH "vaddr"
 #define TARGET_PID_PATH DEBUGFS_PATH "pid"
+#define FLAGS_MIN_BITS  PAGE_BITS
+#define INVALID_ENTRY   -1
 
 #define FLAGS_MIN_BITS PAGE_BITS
 #define HIDE_KERNEL    1
@@ -194,14 +196,63 @@ static void update_sync_vaddr(enum pgtable_level level, int index)
 	sync_vaddr();
 }
 
+static void print_entry(int index, enum pgtable_level level, unsigned long entry)
+{
+	unsigned long phys_addr, flags, present, huge;
+	/* Ignoring transparent huge pages, etc. TODO: Deal properly. */
+	int count = level_size[level];
+	unsigned long phys_addr_mask = (~(count - 1)) & MAX_PHYS_MASK;
+	unsigned long flags_mask = ~phys_addr_mask;
+
+	phys_addr = entry&phys_addr_mask;
+	flags = entry&flags_mask;
+	present = flags&_PAGE_PRESENT;
+	/* TODO: We just don't deal with huge pages yet, fix. */
+	huge = flags&_PAGE_PSE;
+
+	print_indent(level);
+	printf("%03d ", index);
+	if (index == INVALID_ENTRY) {
+		printf("<invalid>\n");
+		return;
+	}
+
+	if (!present)
+		printf("   <not present> ");
+	else if (huge)
+		printf("          <huge> ");
+	else
+		printf("%016lx ", phys_addr);
+
+	print_bin(flags, FLAGS_MIN_BITS);
+
+	if (flags&_PAGE_NX)
+		printf(" NX");
+
+	printf("\n");
+}
+
+static void update_stats(enum pgtable_level level, unsigned long entry)
+{
+	int present, huge, rw;
+
+	present = entry&_PAGE_PRESENT;
+	huge = entry&_PAGE_PSE;
+	rw = entry&_PAGE_RW;
+
+	/* Each entry is a page of the next level. */
+	page_count[level+1]++;
+
+	if (level == PTE_LEVEL && present && !huge && rw)
+		rw_pte_count++;
+}
+
 static void print_pagetable(enum pgtable_level level)
 {
 	int i;
 	unsigned long entry;
 	/* Ignoring transparent huge pages, etc. TODO: Deal properly. */
 	int count = level_size[level];
-	unsigned long phys_addr_mask = (~(count - 1)) & MAX_PHYS_MASK;
-	unsigned long flags_mask = ~phys_addr_mask;
 
 	FILE *file = fopen(level_path[level], "r");
 
@@ -217,7 +268,7 @@ static void print_pagetable(enum pgtable_level level)
 
 	for (i = 0; i < count; i++) {
 		int valid = 1;
-		unsigned long phys_addr, flags, present, huge;
+		int present, huge;
 
 		if (fread(&entry, 1, WORD_SIZE, file) != WORD_SIZE) {
 			if (errno == EINVAL) {
@@ -235,44 +286,17 @@ static void print_pagetable(enum pgtable_level level)
 		if (valid && !entry)
 			continue;
 
-		phys_addr = entry&phys_addr_mask;
-		flags = entry&flags_mask;
-		present = flags&_PAGE_PRESENT;
-		/* TODO: We just don't deal with huge pages yet, fix. */
-		huge = flags&_PAGE_PSE;
+		present = entry&_PAGE_PRESENT;
+		huge = entry&_PAGE_PSE;
 
-		print_indent(level);
-		printf("%03d ", i);
-		if (!valid) {
-			printf("<invalid>\n");
-			continue;
-		}
-
-		if (!present)
-			printf("   <not present> ");
-		else if (huge)
-			printf("          <huge> ");
-		else
-			printf("%016lx ", phys_addr);
-
-		print_bin(flags, FLAGS_MIN_BITS);
-
-		if (flags&_PAGE_NX)
-			printf(" NX");
-
-		printf("\n");
+		print_entry(valid ? i : INVALID_ENTRY, level, entry);
+		update_stats(level, entry);
 
 		if (present && !huge && level < PTE_LEVEL) {
 			update_sync_vaddr(level, i);
 
 			print_pagetable(level + 1);
 		}
-
-		/* Each entry is a page of the next level. */
-		page_count[level+1]++;
-
-		if (level == PTE_LEVEL && present && !huge && (flags&_PAGE_RW))
-		  rw_pte_count++;
 	}
 
 	fclose(file);
