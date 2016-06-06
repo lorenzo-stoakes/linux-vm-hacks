@@ -73,6 +73,15 @@ static unsigned long flag_mapping[FLAG_COUNT] = {
 	_PAGE_NX
 };
 
+static char *flag_name[FLAG_COUNT] = {
+	"R/W",
+	"User",
+	"Accessed",
+	"Dirty",
+	"Global",
+	"NX"
+};
+
 static char *level_name[LEVEL_COUNT+1] = {
 	"PGD",
 	"PUD",
@@ -346,7 +355,7 @@ static void print_pagetable(enum pgtable_level level)
 
 static void print_counts(void)
 {
-	int i, count;
+	int i, count, ptes;
 	int total = 0;
 
 	puts("\n== Page Counts ==\n");
@@ -363,15 +372,18 @@ static void print_counts(void)
 
 	printf("\nTOTAL:\t\t%8d (", total);
 	print_human_bytes((unsigned long)total * PAGE_SIZE);
-	printf(")\n");
+	printf(")\n\n");
 
-	printf("\nTOTAL R/W PTEs:\t%8d (", pte_count[RW_FLAG]);
-	print_human_bytes((unsigned long)pte_count[RW_FLAG] * PAGE_SIZE);
-	printf(")\n");
+	/* Each physical page == a PTE entry. */
+	ptes = page_count[LEVEL_COUNT];
+	for (i = 0; i < FLAG_COUNT; i++) {
+		count = pte_count[i];
 
-	if (pte_count[GLOBAL_FLAG] > 0) {
-		printf("TOTAL GLB PTEs:\t%8d (", pte_count[GLOBAL_FLAG]);
-		print_human_bytes((unsigned long)pte_count[GLOBAL_FLAG] * PAGE_SIZE);
+		if (count == 0)
+			continue;
+
+		printf("%s PTEs:\t%8d/%d (", flag_name[i], pte_count[i], ptes);
+		print_human_bytes((unsigned long)pte_count[i] * PAGE_SIZE);
 		printf(")\n");
 	}
 }
