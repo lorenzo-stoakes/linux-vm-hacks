@@ -139,18 +139,18 @@ static void print_human_bytes(unsigned long bytes)
 static void print_bin(unsigned long val, int min_len)
 {
 	int i;
-	char buf[WORD_SIZE + 1];
+	char buf[PAGE_SHIFT + 1];
 
-	buf[WORD_SIZE] = '\0';
-	for (i = 0; i < WORD_SIZE && val != 0; i++) {
-		buf[WORD_SIZE-1-i] = (val&1) ? '1' : '0';
+	buf[PAGE_SHIFT] = '\0';
+	for (i = 0; i < PAGE_SHIFT && val != 0; i++) {
+		buf[PAGE_SHIFT-1-i] = (val&1) ? '1' : '0';
 		val >>= 1;
 	}
 
 	for (; i < min_len; i++)
-		buf[WORD_SIZE-1-i] = '0';
+		buf[PAGE_SHIFT-1-i] = '0';
 
-	printf("%s", buf + WORD_SIZE - i);
+	printf("%s", buf + PAGE_SHIFT - i);
 }
 
 static void print_indent(int level)
