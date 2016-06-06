@@ -100,7 +100,7 @@ static char *human_suffix[] = {
 
 static unsigned long vaddr;
 /* +1 to take into account physical pages. */
-static int page_count[LEVEL_COUNT+1], rw_pte_count;
+static int page_count[LEVEL_COUNT+1], rw_pte_count, global_pte_count;
 
 static void set_target_pid(char *pid_str)
 {
@@ -240,11 +240,12 @@ static void print_entry(int index, enum pgtable_level level, unsigned long entry
 
 static void update_stats(enum pgtable_level level, unsigned long entry)
 {
-	int present, huge, rw;
+	int present, huge, rw, global;
 
 	present = entry&_PAGE_PRESENT;
 	huge = entry&_PAGE_PSE;
 	rw = entry&_PAGE_RW;
+	global = entry&_PAGE_GLOBAL;
 
 	/* Each entry is a page of the next level. */
 	page_count[level+1]++;
@@ -254,6 +255,9 @@ static void update_stats(enum pgtable_level level, unsigned long entry)
 
 	if (rw)
 		rw_pte_count++;
+
+	if (global)
+		global_pte_count++;
 }
 
 static void print_pagetable(enum pgtable_level level)
@@ -348,6 +352,12 @@ static void print_counts(void)
 	printf("\nTOTAL R/W PTEs:\t%8d (", rw_pte_count);
 	print_human_bytes((unsigned long)rw_pte_count * PAGE_SIZE);
 	printf(")\n");
+
+	if (global_pte_count > 0) {
+		printf("TOTAL GLB PTEs:\t%8d (", global_pte_count);
+		print_human_bytes((unsigned long)global_pte_count * PAGE_SIZE);
+		printf(")\n");
+	}
 }
 
 int main(int argc, char *argv[])
