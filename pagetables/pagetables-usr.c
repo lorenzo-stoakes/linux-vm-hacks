@@ -11,9 +11,11 @@
 /* Kinda assuming x86-64 here. */
 #define _PAGE_PRESENT  (1UL<<0)
 #define _PAGE_RW       (1UL<<1)
+#define _PAGE_USER     (1UL<<2)
 #define _PAGE_ACCESSED (1UL<<5)
 #define _PAGE_DIRTY    (1UL<<6)
 #define _PAGE_PSE      (1UL<<7)
+#define _PAGE_GLOBAL   (1UL<<8)
 #define _PAGE_NX       (1UL<<63)
 #define PTRS_PER_PGD   512
 #define PTRS_PER_PUD   512
