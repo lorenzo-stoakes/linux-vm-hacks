@@ -54,6 +54,25 @@ enum pgtable_level {
 	LEVEL_COUNT
 };
 
+enum flag {
+	RW_FLAG,
+	USER_FLAG,
+	ACCESSED_FLAG,
+	DIRTY_FLAG,
+	GLOBAL_FLAG,
+	NX_FLAG,
+	FLAG_COUNT
+};
+
+static unsigned long flag_mapping[FLAG_COUNT] = {
+	_PAGE_RW,
+	_PAGE_USER,
+	_PAGE_ACCESSED,
+	_PAGE_DIRTY,
+	_PAGE_GLOBAL,
+	_PAGE_NX
+};
+
 static char *level_name[LEVEL_COUNT+1] = {
 	"PGD",
 	"PUD",
@@ -100,7 +119,7 @@ static char *human_suffix[] = {
 
 static unsigned long vaddr;
 /* +1 to take into account physical pages. */
-static int page_count[LEVEL_COUNT+1], rw_pte_count, global_pte_count;
+static int page_count[LEVEL_COUNT+1], pte_count[FLAG_COUNT];
 
 static void set_target_pid(char *pid_str)
 {
@@ -240,12 +259,11 @@ static void print_entry(int index, enum pgtable_level level, unsigned long entry
 
 static void update_stats(enum pgtable_level level, unsigned long entry)
 {
-	int present, huge, rw, global;
+	int i;
+	int present, huge;
 
 	present = entry&_PAGE_PRESENT;
 	huge = entry&_PAGE_PSE;
-	rw = entry&_PAGE_RW;
-	global = entry&_PAGE_GLOBAL;
 
 	/* Each entry is a page of the next level. */
 	page_count[level+1]++;
@@ -253,11 +271,9 @@ static void update_stats(enum pgtable_level level, unsigned long entry)
 	if (level < PTE_LEVEL || !present || huge)
 		return;
 
-	if (rw)
-		rw_pte_count++;
-
-	if (global)
-		global_pte_count++;
+	for (i = 0; i < FLAG_COUNT; i++)
+		if (entry&flag_mapping[i])
+			pte_count[i]++;
 }
 
 static void print_pagetable(enum pgtable_level level)
@@ -349,13 +365,13 @@ static void print_counts(void)
 	print_human_bytes((unsigned long)total * PAGE_SIZE);
 	printf(")\n");
 
-	printf("\nTOTAL R/W PTEs:\t%8d (", rw_pte_count);
-	print_human_bytes((unsigned long)rw_pte_count * PAGE_SIZE);
+	printf("\nTOTAL R/W PTEs:\t%8d (", pte_count[RW_FLAG]);
+	print_human_bytes((unsigned long)pte_count[RW_FLAG] * PAGE_SIZE);
 	printf(")\n");
 
-	if (global_pte_count > 0) {
-		printf("TOTAL GLB PTEs:\t%8d (", global_pte_count);
-		print_human_bytes((unsigned long)global_pte_count * PAGE_SIZE);
+	if (pte_count[GLOBAL_FLAG] > 0) {
+		printf("TOTAL GLB PTEs:\t%8d (", pte_count[GLOBAL_FLAG]);
+		print_human_bytes((unsigned long)pte_count[GLOBAL_FLAG] * PAGE_SIZE);
 		printf(")\n");
 	}
 }
