@@ -30,7 +30,7 @@
 #define PAGE_SIZE     (1<<12)
 #define MAX_PHYS_MASK ((1UL<<46)-1)
 
-#define WORD_SIZE       (sizeof(unsigned long))
+#define WORD_SIZE       ((int)sizeof(unsigned long))
 #define DEBUGFS_PATH    "/sys/kernel/debug/pagetables/"
 #define VADDR_PATH      DEBUGFS_PATH "vaddr"
 #define TARGET_PID_PATH DEBUGFS_PATH "pid"
@@ -99,7 +99,7 @@ static int page_count[LEVEL_COUNT+1], rw_pte_count;
 static void set_target_pid(char *pid_str)
 {
 	FILE *file = fopen(TARGET_PID_PATH, "r+");
-	int len = strlen(pid_str);
+	unsigned int len = strlen(pid_str);
 
 	if (!file) {
 		fprintf(stderr,
@@ -165,7 +165,7 @@ static void sync_vaddr(void)
 {
 	char buf[sizeof("0xdeadbeefdeadbeef")];
 	FILE *file = fopen(VADDR_PATH, "r+");
-	int len;
+	unsigned int len;
 
 	if (!file) {
 		fprintf(stderr,
