@@ -249,7 +249,10 @@ static void update_stats(enum pgtable_level level, unsigned long entry)
 	/* Each entry is a page of the next level. */
 	page_count[level+1]++;
 
-	if (level == PTE_LEVEL && present && !huge && rw)
+	if (level < PTE_LEVEL || !present || huge)
+		return;
+
+	if (rw)
 		rw_pte_count++;
 }
 
