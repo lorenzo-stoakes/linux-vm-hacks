@@ -120,7 +120,7 @@ static void print_human_bytes(unsigned long bytes)
 	int suffix_ind = 0;
 	double bytesf = (double)bytes;
 
-	while (bytesf > 1024) {
+	while (bytesf > 1024 && suffix_ind < 5) {
 		suffix_ind++;
 		bytesf /= 1024;
 	}
