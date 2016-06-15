@@ -35,7 +35,6 @@
 #define VADDR_PATH      DEBUGFS_PATH "vaddr"
 #define TARGET_PID_PATH DEBUGFS_PATH "pid"
 #define FLAGS_MIN_BITS  PAGE_BITS
-#define INVALID_ENTRY   -1
 
 /* User-defined: */
 #define HIDE_KERNEL 1
@@ -245,9 +244,10 @@ static void print_entry(int index, enum pgtable_level level, unsigned long entry
 	huge = flags&_PAGE_PSE;
 
 	print_indent(level);
-	printf("%03d ", index);
-	if (index == INVALID_ENTRY) {
-		printf("<invalid>\n");
+	printf("%03d ", index < 0 ? -index : index);
+
+	if (index < 0) {
+		printf("       <INVALID> \n");
 		return;
 	}
 
@@ -339,7 +339,7 @@ static void print_pagetable(enum pgtable_level level)
 		huge = entry&_PAGE_PSE;
 
 		if (!STATS_ONLY)
-			print_entry(valid ? i : INVALID_ENTRY, level, entry);
+			print_entry(valid ? i : -i, level, entry);
 
 		update_stats(level, entry);
 
