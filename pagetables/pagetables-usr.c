@@ -247,7 +247,7 @@ static void print_entry(int index, enum pgtable_level level, unsigned long entry
 	printf("%03d ", index < 0 ? -index : index);
 
 	if (index < 0) {
-		printf("       <INVALID> \n");
+		printf("       <INVALID>\n");
 		return;
 	}
 
