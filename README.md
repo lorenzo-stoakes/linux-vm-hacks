@@ -6,6 +6,10 @@ designed to help me better understand the linux VM subsystem.
 This project's sister repo, [linux-vm-notes][vm-notes] contains notes on the
 subsystem.
 
+## experiments
+
+Contains userland experiments for exploring the linux VM.
+
 ## pagetables
 
 Pagetables is a kernel module which outputs the precise PGD/PUD/PMD/PTE page
