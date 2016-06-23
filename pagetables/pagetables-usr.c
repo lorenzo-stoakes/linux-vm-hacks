@@ -40,6 +40,7 @@
 #define HIDE_KERNEL 1
 #define HIDE_USER   0
 #define STATS_ONLY  0
+#define MAX_LEVEL   PTE_LEVEL
 
 #if HIDE_KERNEL && HIDE_USER
 #error Choose HIDE_KERNEL _or_ HIDE_USER.
@@ -343,7 +344,7 @@ static void print_pagetable(enum pgtable_level level)
 
 		update_stats(level, entry);
 
-		if (present && !huge && level < PTE_LEVEL) {
+		if (present && !huge && level < MAX_LEVEL) {
 			update_sync_vaddr(level, i);
 
 			print_pagetable(level + 1);
