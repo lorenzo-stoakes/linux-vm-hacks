@@ -37,6 +37,8 @@ static void print_addr(unsigned char *ptr)
 	unsigned long pgd_ind, pud_ind, pmd_ind, pte_ind;
 	unsigned long addr = (unsigned long)ptr;
 
+	printf("Address = %016lx\n", addr);
+
 	pgd_ind = addr>>PGDIR_SHIFT;
 	addr &= ((1UL<<PGDIR_SHIFT)-1);
 
@@ -49,7 +51,6 @@ static void print_addr(unsigned char *ptr)
 	pte_ind = addr>>PAGE_SHIFT;
 	addr &= ((1UL<<PAGE_SHIFT)-1);
 
-	printf("Address = %016lx\n", addr);
 	printf("PGD/PUD/PMD/PTE/offset=%lu/%lu/%lu/%lu/%lu\n",
 		pgd_ind, pud_ind, pmd_ind, pte_ind, addr);
 }
