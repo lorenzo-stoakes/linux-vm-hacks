@@ -1,8 +1,14 @@
-*.ko
+# 'Hidden' files, modulo this one.
+.*
+!.gitignore
+
+# Generate files
 *.order
 *.symvers
 *.mod.*
 *.o
-.*
-!.gitignore
+
+# Binaries
+*.ko
 pagetables/pagetables
+experiments/multi_page_alloc
