@@ -8,7 +8,7 @@
  * Blocks waiting for input at each case.
  */
 
-
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
