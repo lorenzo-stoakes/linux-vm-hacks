@@ -13,3 +13,4 @@
 pagetables/pagetables
 experiments/multi_page_alloc
 experiments/crazy_alloc
+experiments/simple_alloc
