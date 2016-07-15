@@ -271,15 +271,14 @@ static void print_entry(int index, enum pgtable_level level, unsigned long entry
 static void update_stats(enum pgtable_level level, unsigned long entry)
 {
 	int i;
-	int present, huge;
+	int present;
 
 	present = entry&_PAGE_PRESENT;
-	huge = entry&_PAGE_PSE;
 
 	/* Each entry is a page of the next level. */
 	page_count[level+1]++;
 
-	if (level < PTE_LEVEL || !present || huge)
+	if (level < PTE_LEVEL || !present)
 		return;
 
 	for (i = 0; i < FLAG_COUNT; i++)
