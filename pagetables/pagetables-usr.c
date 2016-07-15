@@ -233,7 +233,7 @@ static void update_sync_vaddr(enum pgtable_level level, int index)
 
 static void print_entry(int index, enum pgtable_level level, unsigned long entry)
 {
-	unsigned long phys_addr, flags, present, huge;
+	unsigned long phys_addr, flags, present;
 	/* Ignoring transparent huge pages, etc. TODO: Deal properly. */
 	int count = level_size[level];
 	unsigned long phys_addr_mask = (~(count - 1)) & MAX_PHYS_MASK;
@@ -242,8 +242,6 @@ static void print_entry(int index, enum pgtable_level level, unsigned long entry
 	phys_addr = entry&phys_addr_mask;
 	flags = entry&flags_mask;
 	present = flags&_PAGE_PRESENT;
-	/* TODO: We just don't deal with huge pages yet, fix. */
-	huge = flags&_PAGE_PSE;
 
 	print_indent(level);
 	printf("%03d ", index < 0 ? -index : index);
@@ -255,8 +253,6 @@ static void print_entry(int index, enum pgtable_level level, unsigned long entry
 
 	if (!present)
 		printf("   <not present> ");
-	else if (huge)
-		printf("          <huge> ");
 	else
 		printf("%016lx ", phys_addr);
 
@@ -264,6 +260,8 @@ static void print_entry(int index, enum pgtable_level level, unsigned long entry
 
 	if (flags&_PAGE_NX)
 		printf(" NX");
+	if (flags&_PAGE_PSE)
+		printf(" H");
 
 	printf("\n");
 }
