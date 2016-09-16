@@ -380,6 +380,11 @@ static void print_counts(void)
 
 	puts("\n== Page Counts ==\n");
 
+	/* Pedantry to the absolute maximum. */
+	printf("PGD pages:\t       1 (   4.0 KiB)\n");
+	total++;
+	total_bytes += PAGE_SIZE;
+
 	for (i = 1; i < LEVEL_COUNT; i++) {
 		count = page_count[i];
 
