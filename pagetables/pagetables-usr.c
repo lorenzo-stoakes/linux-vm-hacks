@@ -135,6 +135,7 @@ static char *human_suffix[] = {
 static unsigned long vaddr;
 static unsigned long page_count[LEVEL_COUNT], pte_count[FLAG_COUNT];
 static unsigned long gigantic_page_count, huge_page_count;
+static unsigned long invalid_entry_count;
 
 static void set_target_pid(char *pid_str)
 {
@@ -274,12 +275,17 @@ static void update_pte_counts(unsigned long entry)
 			pte_count[i]++;
 }
 
-static void update_stats(enum pgtable_level level, unsigned long entry)
+static void update_stats(enum pgtable_level level, unsigned long entry, int valid)
 {
 	int huge = entry&_PAGE_PSE;
 
 	if (!(entry&_PAGE_PRESENT))
 		return;
+
+	if (!valid) {
+		invalid_entry_count++;
+		return;
+	}
 
 	if (huge) {
 		switch (level) {
@@ -361,7 +367,7 @@ static void print_pagetable(enum pgtable_level level)
 		if (!STATS_ONLY)
 			print_entry(valid ? i : -i, level, entry);
 
-		update_stats(level, entry);
+		update_stats(level, entry, valid);
 
 		if (present && !huge && level < MAX_LEVEL) {
 			update_sync_vaddr(level, i);
@@ -419,6 +425,10 @@ static void print_counts(void)
 	printf("(");
 	print_human_bytes(total_bytes);
 	printf(")\n\n");
+
+	if (invalid_entry_count > 0)
+		printf("!!! Invalid (unreadable) entries: %lu\n\n",
+			invalid_entry_count);
 
 	ptes = page_count[PHYS_4K_LEVEL] + huge_page_count + gigantic_page_count;
 	for (i = 0; i < FLAG_COUNT; i++) {
