@@ -52,6 +52,7 @@ enum pgtable_level {
 	PUD_LEVEL,
 	PMD_LEVEL,
 	PTE_LEVEL,
+	PHYS_4K_LEVEL,
 	LEVEL_COUNT
 };
 
@@ -83,7 +84,7 @@ static char *flag_name[FLAG_COUNT] = {
 	"NX"
 };
 
-static char *level_name[LEVEL_COUNT+1] = {
+static char *level_name[LEVEL_COUNT] = {
 	"PGD",
 	"PUD",
 	"PMD",
@@ -95,28 +96,32 @@ static char *level_path[LEVEL_COUNT] = {
 	DEBUGFS_PATH "pgd",
 	DEBUGFS_PATH "pud",
 	DEBUGFS_PATH "pmd",
-	DEBUGFS_PATH "pte"
+	DEBUGFS_PATH "pte",
+	""
 };
 
 static int level_size[LEVEL_COUNT] = {
 	PTRS_PER_PGD,
 	PTRS_PER_PUD,
 	PTRS_PER_PMD,
-	PTRS_PER_PTE
+	PTRS_PER_PTE,
+	0
 };
 
 static int level_shift[LEVEL_COUNT] = {
 	PGDIR_SHIFT,
 	PUD_SHIFT,
 	PMD_SHIFT,
-	PAGE_SHIFT
+	PAGE_SHIFT,
+	0
 };
 
 static unsigned long level_mask[LEVEL_COUNT] = {
 	(PTRS_PER_PGD-1UL)<<PGDIR_SHIFT,
 	(PTRS_PER_PUD-1UL)<<PUD_SHIFT,
 	(PTRS_PER_PMD-1UL)<<PMD_SHIFT,
-	(PTRS_PER_PTE-1UL)<<PAGE_SHIFT
+	(PTRS_PER_PTE-1UL)<<PAGE_SHIFT,
+	((1UL<<PAGE_SHIFT)-1UL)
 };
 
 static char *human_suffix[] = {
@@ -128,8 +133,7 @@ static char *human_suffix[] = {
 };
 
 static unsigned long vaddr;
-/* +1 to take into account physical pages. */
-static unsigned long page_count[LEVEL_COUNT+1], pte_count[FLAG_COUNT];
+static unsigned long page_count[LEVEL_COUNT], pte_count[FLAG_COUNT];
 static unsigned long gigantic_page_count, huge_page_count;
 
 static void set_target_pid(char *pid_str)
@@ -375,8 +379,8 @@ static void print_counts(void)
 	unsigned long count, ptes, total = 0, total_bytes = 0;
 
 	puts("\n== Page Counts ==\n");
-	/* <= to include physical pages too. */
-	for (i = 1; i <= LEVEL_COUNT; i++) {
+
+	for (i = 1; i < LEVEL_COUNT; i++) {
 		count = page_count[i];
 
 		printf("%s pages:\t%8lu (", level_name[i], count);
@@ -411,8 +415,7 @@ static void print_counts(void)
 	print_human_bytes(total_bytes);
 	printf(")\n\n");
 
-	/* Each physical page == a PTE entry. */
-	ptes = page_count[LEVEL_COUNT] + huge_page_count + gigantic_page_count;
+	ptes = page_count[PHYS_4K_LEVEL] + huge_page_count + gigantic_page_count;
 	for (i = 0; i < FLAG_COUNT; i++) {
 		count = pte_count[i];
 
