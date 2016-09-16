@@ -88,7 +88,7 @@ static char *level_name[LEVEL_COUNT+1] = {
 	"PUD",
 	"PMD",
 	"PTE",
-	"Physical"
+	"4K Phys"
 };
 
 static char *level_path[LEVEL_COUNT] = {
