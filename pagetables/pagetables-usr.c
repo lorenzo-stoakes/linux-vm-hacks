@@ -28,6 +28,8 @@
 #define PAGE_SHIFT     12
 #define PAGE_SIZE      (1UL<<PAGE_SHIFT)
 #define MAX_PHYS_MASK  ((1UL<<46)-1)
+#define HUGE_PAGE_SIZE (1UL<<PMD_SHIFT)
+#define GIGA_PAGE_SIZE (1UL<<PUD_SHIFT)
 
 #define WORD_SIZE       ((int)sizeof(unsigned long))
 #define DEBUGFS_PATH    "/sys/kernel/debug/pagetables/"
@@ -128,6 +130,7 @@ static char *human_suffix[] = {
 static unsigned long vaddr;
 /* +1 to take into account physical pages. */
 static unsigned long page_count[LEVEL_COUNT+1], pte_count[FLAG_COUNT];
+static unsigned long gigantic_page_count, huge_page_count;
 
 static void set_target_pid(char *pid_str)
 {
@@ -269,13 +272,33 @@ static void update_pte_counts(unsigned long entry)
 
 static void update_stats(enum pgtable_level level, unsigned long entry)
 {
+	int huge = entry&_PAGE_PSE;
+
 	if (!(entry&_PAGE_PRESENT))
 		return;
 
-	/* Each entry is a page of the next level. */
-	page_count[level+1]++;
+	if (huge) {
+		switch (level) {
+		case PUD_LEVEL:
+			gigantic_page_count++;
 
-	if (level == PTE_LEVEL)
+			break;
+		case PMD_LEVEL:
+			huge_page_count++;
+
+			break;
+		default:
+			fprintf(stderr, "WARNING: Unrecognised huge page at %s level\n",
+				level_name[level]);
+
+			break;
+		}
+	} else {
+		/* Each entry is a page of the next level. */
+		page_count[level+1]++;
+	}
+
+	if (level == PTE_LEVEL || huge)
 		update_pte_counts(entry);
 }
 
@@ -349,7 +372,7 @@ static void print_pagetable(enum pgtable_level level)
 static void print_counts(void)
 {
 	int i;
-	unsigned long count, ptes, total = 0;
+	unsigned long count, ptes, total = 0, total_bytes = 0;
 
 	puts("\n== Page Counts ==\n");
 	/* <= to include physical pages too. */
@@ -361,14 +384,35 @@ static void print_counts(void)
 		printf(")\n");
 
 		total += count;
+		total_bytes += count*PAGE_SIZE;
 	}
 
-	printf("\nTOTAL:\t\t%8lu (", total);
-	print_human_bytes(total * PAGE_SIZE);
+	if (gigantic_page_count > 0) {
+		printf("Gigantic Phys pages:\t%8lu (", gigantic_page_count);
+		print_human_bytes(gigantic_page_count * GIGA_PAGE_SIZE);
+		printf(")\n");
+
+		total += gigantic_page_count;
+		total_bytes += gigantic_page_count * GIGA_PAGE_SIZE;
+	}
+
+	if (huge_page_count > 0) {
+		printf("Huge Phys pages:%8lu (", huge_page_count);
+		print_human_bytes(huge_page_count * HUGE_PAGE_SIZE);
+		printf(")\n");
+
+		total += huge_page_count;
+		total_bytes += huge_page_count * HUGE_PAGE_SIZE;
+	}
+
+	printf("TOTAL:\t\t%8lu ", total);
+
+	printf("(");
+	print_human_bytes(total_bytes);
 	printf(")\n\n");
 
 	/* Each physical page == a PTE entry. */
-	ptes = page_count[LEVEL_COUNT];
+	ptes = page_count[LEVEL_COUNT] + huge_page_count + gigantic_page_count;
 	for (i = 0; i < FLAG_COUNT; i++) {
 		count = pte_count[i];
 
