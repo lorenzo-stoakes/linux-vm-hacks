@@ -27,15 +27,14 @@
 #define PMD_SHIFT      21
 #define PAGE_SHIFT     12
 
-#define PAGE_BITS     12
-#define PAGE_SIZE     (1<<12)
+#define PAGE_SIZE     (1<<PAGE_SHIFT)
 #define MAX_PHYS_MASK ((1UL<<46)-1)
 
 #define WORD_SIZE       ((int)sizeof(unsigned long))
 #define DEBUGFS_PATH    "/sys/kernel/debug/pagetables/"
 #define VADDR_PATH      DEBUGFS_PATH "vaddr"
 #define TARGET_PID_PATH DEBUGFS_PATH "pid"
-#define FLAGS_MIN_BITS  PAGE_BITS
+#define FLAGS_MIN_BITS  PAGE_SHIFT
 
 /* User-defined: */
 #define HIDE_KERNEL 1
