@@ -397,7 +397,7 @@ static void print_counts(void)
 	}
 
 	if (gigantic_page_count > 0) {
-		printf("Gigantic Phys pages:\t%8lu (", gigantic_page_count);
+		printf("Giga Phys pages:%8lu (", gigantic_page_count);
 		print_human_bytes(gigantic_page_count * GIGA_PAGE_SIZE);
 		printf(")\n");
 
