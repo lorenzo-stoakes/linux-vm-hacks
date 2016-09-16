@@ -260,22 +260,25 @@ static void print_entry(int index, enum pgtable_level level, unsigned long entry
 	printf("\n");
 }
 
-static void update_stats(enum pgtable_level level, unsigned long entry)
+static void update_pte_counts(unsigned long entry)
 {
 	int i;
-	int present;
-
-	present = entry&_PAGE_PRESENT;
-
-	/* Each entry is a page of the next level. */
-	page_count[level+1]++;
-
-	if (level < PTE_LEVEL || !present)
-		return;
 
 	for (i = 0; i < FLAG_COUNT; i++)
 		if (entry&flag_mapping[i])
 			pte_count[i]++;
+}
+
+static void update_stats(enum pgtable_level level, unsigned long entry)
+{
+	if (!(entry&_PAGE_PRESENT))
+		return;
+
+	/* Each entry is a page of the next level. */
+	page_count[level+1]++;
+
+	if (level == PTE_LEVEL)
+		update_pte_counts(entry);
 }
 
 static void print_pagetable(enum pgtable_level level)
