@@ -127,7 +127,7 @@ static char *human_suffix[] = {
 
 static unsigned long vaddr;
 /* +1 to take into account physical pages. */
-static int page_count[LEVEL_COUNT+1], pte_count[FLAG_COUNT];
+static unsigned long page_count[LEVEL_COUNT+1], pte_count[FLAG_COUNT];
 
 static void set_target_pid(char *pid_str)
 {
@@ -348,23 +348,23 @@ static void print_pagetable(enum pgtable_level level)
 
 static void print_counts(void)
 {
-	int i, count, ptes;
-	int total = 0;
+	int i;
+	unsigned long count, ptes, total = 0;
 
 	puts("\n== Page Counts ==\n");
 	/* <= to include physical pages too. */
 	for (i = 1; i <= LEVEL_COUNT; i++) {
 		count = page_count[i];
 
-		printf("%s pages:\t%8d (", level_name[i], count);
-		print_human_bytes((unsigned long)count * PAGE_SIZE);
+		printf("%s pages:\t%8lu (", level_name[i], count);
+		print_human_bytes(count * PAGE_SIZE);
 		printf(")\n");
 
 		total += count;
 	}
 
-	printf("\nTOTAL:\t\t%8d (", total);
-	print_human_bytes((unsigned long)total * PAGE_SIZE);
+	printf("\nTOTAL:\t\t%8lu (", total);
+	print_human_bytes(total * PAGE_SIZE);
 	printf(")\n\n");
 
 	/* Each physical page == a PTE entry. */
@@ -375,7 +375,7 @@ static void print_counts(void)
 		if (count == 0)
 			continue;
 
-		printf("%s PTEs:\t%8d/%d (", flag_name[i], pte_count[i], ptes);
+		printf("%s PTEs:\t%8lu/%lu (", flag_name[i], pte_count[i], ptes);
 		print_human_bytes((unsigned long)pte_count[i] * PAGE_SIZE);
 		printf(")\n");
 	}
