@@ -234,7 +234,6 @@ static void update_sync_vaddr(enum pgtable_level level, int index)
 static void print_entry(int index, enum pgtable_level level, unsigned long entry)
 {
 	unsigned long phys_addr, flags, present;
-	/* Ignoring transparent huge pages, etc. TODO: Deal properly. */
 	int count = level_size[level];
 	unsigned long phys_addr_mask = (~(count - 1)) & MAX_PHYS_MASK;
 	unsigned long flags_mask = ~phys_addr_mask;
@@ -288,7 +287,6 @@ static void print_pagetable(enum pgtable_level level)
 {
 	int i, start = 0;
 	unsigned long entry;
-	/* Ignoring transparent huge pages, etc. TODO: Deal properly. */
 	int count = level_size[level];
 
 	FILE *file = fopen(level_path[level], "r");
