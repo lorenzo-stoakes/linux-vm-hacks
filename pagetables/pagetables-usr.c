@@ -165,21 +165,16 @@ static void print_human_bytes(unsigned long bytes)
 	printf("%6.1f %s", bytesf, human_suffix[suffix_ind]);
 }
 
-static void print_bin(unsigned long val, int min_len)
+static void print_bin(unsigned long val, int len)
 {
 	int i;
-	char buf[PAGE_SHIFT + 1];
+	char buf[65];
 
-	buf[PAGE_SHIFT] = '\0';
-	for (i = 0; i < PAGE_SHIFT && val != 0; i++) {
-		buf[PAGE_SHIFT-1-i] = (val&1) ? '1' : '0';
-		val >>= 1;
-	}
+	buf[len] = '\0';
+	for (i = 0; i < len; i++)
+		buf[len-i-1] = val&(1UL<<i) ? '1' : '0';
 
-	for (; i < min_len; i++)
-		buf[PAGE_SHIFT-1-i] = '0';
-
-	printf("%s", buf + PAGE_SHIFT - i);
+	printf("%s", buf);
 }
 
 static void print_indent(int level)
