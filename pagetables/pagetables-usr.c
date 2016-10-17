@@ -31,6 +31,8 @@
 #define HUGE_PAGE_SIZE (1UL<<PMD_SHIFT)
 #define GIGA_PAGE_SIZE (1UL<<PUD_SHIFT)
 
+#define KERNEL_PGD_BOUNDARY 272
+
 #define WORD_SIZE       ((int)sizeof(unsigned long))
 #define DEBUGFS_PATH    "/sys/kernel/debug/pagetables/"
 #define VADDR_PATH      DEBUGFS_PATH "vaddr"
@@ -326,19 +328,20 @@ static void print_pagetable(enum pgtable_level level)
 		exit(1);
 	}
 
-	/* Top half of PGD entries -> kernel mappings. */
-	if (HIDE_KERNEL && level == PGD_LEVEL) {
-		count /= 2;
-	} else if (HIDE_USER && level == PGD_LEVEL) {
-		/* fseek() seems not to work for sysfs files. */
-		for (i = 0; i < count/2; i++) {
-			if (fread(&entry, 1, WORD_SIZE, file) != WORD_SIZE) {
-				fprintf(stderr, "pagetables: error: seek error: %s\n",
-					strerror(errno));
-				exit(1);
-			}
+	if (level == PGD_LEVEL) {
+		if (HIDE_KERNEL)
+			count = KERNEL_PGD_BOUNDARY-1;
+		else if (HIDE_USER && level == PGD_LEVEL) {
+			/* fseek() seems not to work for sysfs files. */
+			for (i = 0; i < KERNEL_PGD_BOUNDARY; i++)
+				if (fread(&entry, 1, WORD_SIZE, file) != WORD_SIZE) {
+					fprintf(stderr, "pagetables: error: seek error: %s\n",
+						strerror(errno));
+					exit(1);
+				}
+
+			start = KERNEL_PGD_BOUNDARY;
 		}
-		start = count/2;
 	}
 
 	for (i = start; i < count; i++) {
